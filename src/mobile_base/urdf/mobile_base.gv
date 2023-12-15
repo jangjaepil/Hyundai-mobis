@@ -1,0 +1,41 @@
+digraph G {
+node [shape=box];
+"base_link" [label="base_link"];
+"f_l_prismatic" [label="f_l_prismatic"];
+"f_l_rotate" [label="f_l_rotate"];
+"f_l_ew" [label="f_l_ew"];
+"f_r_prismatic" [label="f_r_prismatic"];
+"f_r_rotate" [label="f_r_rotate"];
+"f_r_ew" [label="f_r_ew"];
+"r_l_prismatic" [label="r_l_prismatic"];
+"r_l_rotate" [label="r_l_rotate"];
+"r_l_ew" [label="r_l_ew"];
+"r_r_prismatic" [label="r_r_prismatic"];
+"r_r_rotate" [label="r_r_rotate"];
+"r_r_ew" [label="r_r_ew"];
+node [shape=ellipse, color=blue, fontcolor=blue];
+"base_link" -> "f_l_prismatic_joint" [label="xyz: 0.3 0.3 0.3 \nrpy: 0 -0 0"]
+"f_l_prismatic_joint" -> "f_l_prismatic"
+"f_l_prismatic" -> "f_l_rotate_joint" [label="xyz: 0 0 -0.012485 \nrpy: 0 -0 0"]
+"f_l_rotate_joint" -> "f_l_rotate"
+"f_l_rotate" -> "f_l_ew_joint" [label="xyz: 0 0 -0.087515 \nrpy: -1.5708 0 0"]
+"f_l_ew_joint" -> "f_l_ew"
+"base_link" -> "f_r_prismatic_joint" [label="xyz: 0.3 -0.3 0.3 \nrpy: 0 -0 0"]
+"f_r_prismatic_joint" -> "f_r_prismatic"
+"f_r_prismatic" -> "f_r_rotate_joint" [label="xyz: 0 0 -0.206891 \nrpy: 0 -0 0"]
+"f_r_rotate_joint" -> "f_r_rotate"
+"f_r_rotate" -> "f_r_ew_joint" [label="xyz: 0 0 0.106891 \nrpy: -1.5708 0 0"]
+"f_r_ew_joint" -> "f_r_ew"
+"base_link" -> "r_l_prismatic_joint" [label="xyz: -0.3 0.3 0.3 \nrpy: 0 -0 0"]
+"r_l_prismatic_joint" -> "r_l_prismatic"
+"r_l_prismatic" -> "r_l_rotate_joint" [label="xyz: 0 0 -0.0706098 \nrpy: 0 -0 0"]
+"r_l_rotate_joint" -> "r_l_rotate"
+"r_l_rotate" -> "r_l_ew_joint" [label="xyz: 0 0 -0.02939 \nrpy: -1.5708 0 0"]
+"r_l_ew_joint" -> "r_l_ew"
+"base_link" -> "r_r_prismatic_joint" [label="xyz: -0.3 -0.3 0.3 \nrpy: 0 -0 0"]
+"r_r_prismatic_joint" -> "r_r_prismatic"
+"r_r_prismatic" -> "r_r_rotate_joint" [label="xyz: 0 0 -0.03854 \nrpy: 0 -0 0"]
+"r_r_rotate_joint" -> "r_r_rotate"
+"r_r_rotate" -> "r_r_ew_joint" [label="xyz: 0 0 -0.06146 \nrpy: -1.5708 0 0"]
+"r_r_ew_joint" -> "r_r_ew"
+}

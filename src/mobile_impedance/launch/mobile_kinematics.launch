@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<node name = "lift_pos" pkg="mobile_impedance" type="lift_pos" output="screen"/>
+<include file="$(find mobile_base)/launch/gazebo.launch"/>
+</launch>

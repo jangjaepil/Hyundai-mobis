@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<node name = "impedance_force" pkg="mobile_impedance" type="impedance_force" output="screen"/>
+<node name = "mobile_adimtance" pkg="mobile_impedance" type="mobile_admittance" output="screen"/>
+<include file="$(find mobile_base)/launch/gazebo.launch"/>
+</launch>

@@ -1,0 +1,29 @@
+
+//////////////////////////////// Forward kinematics //////////////////////////////////////
+//ros control type : positoin
+ roslaunch mobile_impedance mobile_kinematics.launch
+
+ rostopic pub /pjoint/command geometry_msgs/Quaternion "x: 0 
+ y: 0
+ z: 0
+ w: 0.0" 
+
+//x:d1,y:d2,z:d3,w:d4 ,d3 is constrained so uncontrollable
+//lower bound:0,upper bound:0.2(meter)
+
+//////////////////////////////////////////////////////////////////////////////////////////
+//ros control type : velocity(default)
+ roslaunch mobile_impedance mobile_pose_control.launch
+
+ rostopic pub /d_psoe geometry_msgs/Pose "position:
+  x: 3.0
+  y: 0.0
+  z: 0.0
+orientation:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 1.0" 
+
+// ref: world frame, unit: meter, radian
+//////////////////////////////////////////////////////////////////////////////////////////
