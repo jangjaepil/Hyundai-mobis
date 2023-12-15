@@ -1,0 +1,1261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="mobile_ur5e">
+  <link
+    name="base_link"> 
+    <inertial>
+      <origin
+        xyz="0 0 0.3"
+        rpy="0 0 0" />
+      <mass
+        value="10"/>
+      <inertia
+        ixx="10"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="10"
+        iyz="0.0"
+        izz="10" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0.3"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0.3"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/base_link.STL" />
+      </geometry>
+      <self_collide>true</self_collide>
+    </collision>
+  </link>
+  <link
+    name="f_l_prismatic">
+    <inertial>
+      <origin
+        xyz="-0.3 -0.3 0.107"
+        rpy="0 0 0" />
+      <mass
+        value="0.63" />
+      <inertia
+        ixx="0.0"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="-0.3 -0.3 0.107"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_l_prismatic.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-0.3 -0.3 0.107"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_l_prismatic.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="f_l_prismatic_joint"
+    type="prismatic">
+    <origin
+      xyz="0.3 0.3 0.3"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="f_l_prismatic" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.25"
+      upper="0.2"
+      effort="100000"
+      velocity="100" />
+    
+  </joint>
+  <link
+    name="f_l_rotate">
+    <inertial>
+      <origin
+        xyz="0 5.55111512312578E-17 -0.0361269533146127"
+        rpy="0 0 0" />
+      <mass
+        value="0.35" />
+      <inertia
+        ixx="01"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="1"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_l_rotate.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_l_rotate.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="f_l_rotate_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.012485"
+      rpy="0 0 0" />
+    <parent
+      link="f_l_prismatic" />
+    <child
+      link="f_l_rotate" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      
+      effort="100"
+      velocity="100" />
+  </joint>
+  <link
+    name="f_l_ew">
+    <inertial>
+      <origin
+        xyz="0 -2.77555756156289E-17 0"
+        rpy="0 0 0" />
+      <mass
+        value="1.89" />
+      <inertia
+        ixx="018"
+        ixy="0.01"
+        ixz="0.17"
+        iyy="0.34"
+        iyz="0.01"
+        izz="0.18" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_l_ew.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_l_ew.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="f_l_ew_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.087515"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="f_l_rotate" />
+    <child
+      link="f_l_ew" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="r_l_prismatic">
+    <inertial>
+      <origin
+        xyz="0.3 -0.3 0.046"
+        rpy="0 0 0" />
+      <mass
+        value="0.63" />
+      <inertia
+        ixx="0.0"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0.3 -0.3 0.046"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_l_prismatic.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0.3 -0.3 0.046"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_l_prismatic.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="r_l_prismatic_joint"
+    type="prismatic">
+    <origin
+      xyz="-0.3 0.3 0.3"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="r_l_prismatic" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.25"
+      upper="0.2"
+      effort="100000"
+      velocity="100" />
+    
+  </joint>
+  <link
+    name="r_l_rotate">
+    <inertial>
+      <origin
+        xyz="0 0 0.0219977106357566"
+        rpy="0 0 0" />
+      <mass
+        value="0.35" />
+      <inertia
+        ixx="01"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="1"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_l_rotate.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_l_rotate.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="r_l_rotate_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.0706097590252183"
+      rpy="0 0 0" />
+    <parent
+      link="r_l_prismatic" />
+    <child
+      link="r_l_rotate" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      effort="100"
+      velocity="100" />
+  </joint>
+  <link
+    name="r_l_ew">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="1.89" />
+      <inertia
+        ixx="018"
+        ixy="0.01"
+        ixz="0.17"
+        iyy="0.34"
+        iyz="0.01"
+        izz="0.18" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_l_ew.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_l_ew.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="r_l_ew_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.02939"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="r_l_rotate" />
+    <child
+      link="r_l_ew" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+  <link
+    name="r_r_prismatic">
+    <inertial>
+      <origin
+        xyz="0.3 0.3 0.044"
+        rpy="0 0 0" />
+      <mass
+        value="0.63" />
+      <inertia
+        ixx="0.0"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0.3 0.3 0.044"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_r_prismatic.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0.3 0.3 0.044"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_r_prismatic.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="r_r_prismatic_joint"
+    type="prismatic">
+    <origin
+      xyz="-0.3 -0.3 0.3"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="r_r_prismatic" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.25"
+      upper="0.2"
+      effort="100000"
+      velocity="100" />
+    
+  </joint>
+  <link
+    name="r_r_rotate">
+    <inertial>
+      <origin
+        xyz="1.66533453693773E-16 1.11022302462516E-16 -0.0100719274166877"
+        rpy="0 0 0" />
+      <mass
+        value="0.35" />
+      <inertia
+        ixx="01"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="1"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_r_rotate.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_r_rotate.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="r_r_rotate_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.03854"
+      rpy="0 0 0" />
+    <parent
+      link="r_r_prismatic" />
+    <child
+      link="r_r_rotate" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+     
+      effort="100"
+      velocity="100" />
+  </joint>
+  <link
+    name="r_r_ew">
+    <inertial>
+      <origin
+        xyz="0 2.77555756156289E-17 0"
+        rpy="0 0 0" />
+      <mass
+        value="1.89" />
+      <inertia
+        ixx="018"
+        ixy="0.01"
+        ixz="0.17"
+        iyy="0.34"
+        iyz="0.01"
+        izz="0.18" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_r_ew.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/r_r_ew.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="r_r_ew_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.06146"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="r_r_rotate" />
+    <child
+      link="r_r_ew" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+  <link
+    name="f_r_prismatic">
+    <inertial>
+      <origin
+        xyz="-0.3 0.3 0.137"
+        rpy="0 0 0" />
+      <mass
+        value="0.63" />
+      <inertia
+        ixx="0.0"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="-0.3 0.3 0.137"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_r_prismatic.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-0.3 0.3 0.137"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_r_prismatic.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="f_r_prismatic_joint"
+    type="prismatic">
+    <origin
+      xyz="0.3 -0.3 0.3"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="f_r_prismatic" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.25"
+      upper="0.2"
+      effort="100000"
+      velocity="100" />
+    
+  </joint>
+  <link
+    name="f_r_rotate">
+    <inertial>
+      <origin
+        xyz="-1.66533453693773E-16 1.11022302462516E-16 0.158278966866196"
+        rpy="0 0 0" />
+      <mass
+        value="1.89" />
+      <inertia
+        ixx="018"
+        ixy="0.01"
+        ixz="0.17"
+        iyy="0.34"
+        iyz="0.01"
+        izz="0.18" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_r_rotate.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_r_rotate.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="f_r_rotate_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 -0.206891015255658"
+      rpy="0 0 0" />
+    <parent
+      link="f_r_prismatic" />
+    <child
+      link="f_r_rotate" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+     
+      effort="100"
+      velocity="100" />
+  </joint>
+  <link
+    name="f_r_ew">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="1.89" />
+      <inertia
+        ixx="018"
+        ixy="0.01"
+        ixz="0.17"
+        iyy="0.34"
+        iyz="0.01"
+        izz="0.18" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_r_ew.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.615686274509804 0.811764705882353 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="file://$(find mobis_description)/meshes/f_r_ew.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="f_r_ew_joint"
+    type="continuous">
+    <origin
+      xyz="0 0 0.106891015255658"
+      rpy="-1.5707963267949 0 0" />
+    <parent
+      link="f_r_rotate" />
+    <child
+      link="f_r_ew" />
+    <axis
+      xyz="0 0 -1" />
+  </joint>
+
+
+  <joint name="mobile_to_ur5e" type="fixed">
+    <origin xyz="0 0 0.66" rpy="0 0 0"/>
+    <parent link="base_link"/>  
+    <child link="manipulator_base_link"/>  
+  </joint>  
+  <link name="manipulator_base_link"/>
+  <link name="base_link_inertia">
+    <visual>
+      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/base.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/base.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="4.0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.00443333156" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
+    </inertial>
+  </link>
+  <link name="shoulder_link">
+    <visual>
+      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/shoulder.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/shoulder.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="3.7"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.010267495893" ixy="0.0" ixz="0.0" iyy="0.010267495893" iyz="0.0" izz="0.00666"/>
+    </inertial>
+  </link>
+  <link name="upper_arm_link">
+    <visual>
+      <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0.138"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/upperarm.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0.138"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/upperarm.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="8.393"/>
+      <origin rpy="0 1.57079632679 0" xyz="-0.2125 0.0 0.138"/>
+      <inertia ixx="0.133885781862" ixy="0.0" ixz="0.0" iyy="0.133885781862" iyz="0.0" izz="0.0151074"/>
+    </inertial>
+  </link>
+  <link name="forearm_link">
+    <visual>
+      <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0.007"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/forearm.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57079632679 0 -1.57079632679" xyz="0 0 0.007"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/forearm.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.275"/>
+      <origin rpy="0 1.57079632679 0" xyz="-0.1961 0.0 0.007"/>
+      <inertia ixx="0.0312093550996" ixy="0.0" ixz="0.0" iyy="0.0312093550996" iyz="0.0" izz="0.004095"/>
+    </inertial>
+  </link>
+  <link name="wrist_1_link">
+    <visual>
+      <!-- TODO: Move this to a parameter -->
+      <origin rpy="1.57079632679 0 0" xyz="0 0 -0.127"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/wrist1.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57079632679 0 0" xyz="0 0 -0.127"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/wrist1.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.219"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.00255989897604" ixy="0.0" ixz="0.0" iyy="0.00255989897604" iyz="0.0" izz="0.0021942"/>
+    </inertial>
+  </link>
+  <link name="wrist_2_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.0997"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/wrist2.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.0997"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/wrist2.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.219"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.00255989897604" ixy="0.0" ixz="0.0" iyy="0.00255989897604" iyz="0.0" izz="0.0021942"/>
+    </inertial>
+  </link>
+  <link name="wrist_3_link">
+    <visual>
+      <origin rpy="1.57079632679 0 0" xyz="0 0 -0.0989"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/wrist3.dae"/>
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="1.57079632679 0 0" xyz="0 0 -0.0989"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/wrist3.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1879"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.0229"/>
+      <inertia ixx="9.89041005217e-05" ixy="0.0" ixz="0.0" iyy="9.89041005217e-05" iyz="0.0" izz="0.0001321171875"/>
+    </inertial>
+  </link>
+  <!-- joints: main serial chain -->
+  <joint name="base_link-base_link_inertia" type="fixed">
+    <parent link="manipulator_base_link"/>
+    <child link="base_link_inertia"/>
+    <!-- 'base_link' is REP-103 aligned (so X+ forward), while the internal
+           frames of the robot/controller have X+ pointing backwards.
+           Use the joint between 'base_link' and 'base_link_inertia' (a dummy
+           link/frame) to introduce the necessary rotation over Z (of pi rad).
+      -->
+    <origin rpy="0 0 3.14159265359" xyz="0 0 0"/>
+  </joint>
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link_inertia"/>
+    <child link="shoulder_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.1625"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.14159265359"/>
+    <dynamics damping="0.1" friction="0.5"/>
+  </joint>
+  <joint name="shoulder_lift_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin rpy="1.570796327 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.14159265359"/>
+    <dynamics damping="0.1" friction="0.5"/>
+  </joint>
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin rpy="0 0 0" xyz="-0.425 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150.0" lower="-3.14159265359" upper="3.14159265359" velocity="3.14159265359"/>
+    <dynamics damping="0.1" friction="0.5"/>
+  </joint>
+  <joint name="wrist_1_joint" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_1_link"/>
+    <origin rpy="0 0 0" xyz="-0.3922 0 0.1333"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="28.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.14159265359"/>
+    <dynamics damping="0.1" friction="0.5"/>
+  </joint>
+  <joint name="wrist_2_joint" type="revolute">
+    <parent link="wrist_1_link"/>
+    <child link="wrist_2_link"/>
+    <origin rpy="1.570796327 0 0" xyz="0 -0.0997 -2.0448811823e-11"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="28.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.14159265359"/>
+    <dynamics damping="0.1" friction="0.5"/>
+  </joint>
+  <joint name="wrist_3_joint" type="revolute">
+    <parent link="wrist_2_link"/>
+    <child link="wrist_3_link"/>
+    <origin rpy="1.57079632659 3.14159265359 3.14159265359" xyz="0 0.0996 -2.04283014801e-11"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="28.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.14159265359"/>
+    <dynamics damping="0.1" friction="0.5"/>
+  </joint>
+ 
+  <!-- ROS-Industrial 'flange' frame: attachment point for EEF models -->
+  <link name="flange"/>
+  <joint name="wrist_3-flange" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="flange"/>
+    <origin rpy="0 -1.57079632679 -1.57079632679" xyz="0 0 0"/>
+  </joint>
+  <!-- ROS-Industrial 'tool0' frame: all-zeros tool frame -->
+  <!-- <link name="tool0"/> -->
+  <link name="tool0">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.001" radius="0.03"/>
+      </geometry>
+    </collision>
+    <visual>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.001" radius="0.03"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="wrist_tool0" type="revolute">
+    <parent link="wrist_3_link"/>
+    <child link="tool0"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <limit effort="1000" lower="-0.0001" upper="0.0001" velocity="10"/>
+  </joint>
+  
+
+  <!-- <joint name="flange-tool0" type="fixed">
+    <origin rpy="1.57079632679 0 1.57079632679" xyz="0 0 0"/>
+    <parent link="flange"/>
+    <child link="tool0"/>
+  </joint> -->
+
+<ros2_control name="GazeboSim" type="system">
+
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+
+      <joint name="shoulder_pan_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="shoulder_lift_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">-1.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="elbow_joint">
+      <command_interface name="position">
+        <param name="min">-3.141592653589793</param>
+        <param name="max">3.141592653589793</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">1.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="wrist_1_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.2</param>
+        <param name="max">3.2</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="wrist_2_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.2</param>
+        <param name="max">3.2</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="wrist_3_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.2</param>
+        <param name="max">3.2</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="f_l_ew_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+     <joint name="f_r_ew_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+     <joint name="r_l_ew_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+     <joint name="r_r_ew_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="f_l_rotate_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="f_r_rotate_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="r_l_rotate_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="r_r_rotate_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="f_l_prismatic_joint">
+      <command_interface name="velocity">
+        <param name="min">-100</param>
+        <param name="max">100</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="f_r_prismatic_joint">
+      <command_interface name="velocity">
+        <param name="min">-100</param>
+        <param name="max">100</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="r_l_prismatic_joint">
+      <command_interface name="velocity">
+        <param name="min">-100</param>
+        <param name="max">100</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="r_r_prismatic_joint">
+      <command_interface name="velocity">
+        <param name="min">-100</param>
+        <param name="max">100</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    </ros2_control>
+
+
+  <gazebo reference="base_link">
+    <selfCollide>false</selfCollide> 
+  </gazebo>
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>/home/jang/mobis_ws/src/mobis_description/config/mobile_manipulator_controller_ur5e.yaml</parameters>
+    </plugin>
+    <plugin name="ros2_linkpose_plugin" filename="libros2_linkpose_plugin.so" >
+      <link>base_link</link>
+    </plugin>
+  </gazebo>
+
+  <gazebo reference="wrist_tool0">
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+  <gazebo>
+    <plugin name="ft_sensor_plugin" filename="libgazebo_ros_ft_sensor.so">
+      <updateRate>1000.0</updateRate>
+      <topicName>ft_sensor</topicName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <joint_name>wrist_tool0</joint_name>
+    </plugin>
+  </gazebo>
+
+  
+
+</robot>
+

@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="mobile_ur5e">
+  
+  <link name="world"/>
+   <!-- base_joint fixes base_link to the environment -->
+  <joint name="base_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 1"/>
+    <parent link="world"/>
+    <child link="manipulator_base_link"/>
+  </joint>
+  <link name="manipulator_base_link"/>
+  <link name="base_link_inertia">
+    <visual>
+      <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/base.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/base.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="4.0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.00443333156" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
+    </inertial>
+  </link>
+  <link name="shoulder_link">
+    <visual>
+      <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/shoulder.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/shoulder.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="3.761"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.01043677082529" ixy="0.0" ixz="0.0" iyy="0.01043677082529" iyz="0.0" izz="0.006769799999999999"/>
+    </inertial>
+  </link>
+  <link name="upper_arm_link">
+    <visual>
+      <origin rpy="1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.138"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/upperarm.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.138"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/upperarm.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="8.058"/>
+      <origin rpy="0 1.5707963267948966 0" xyz="-0.2125 0.0 0.138"/>
+      <inertia ixx="0.128541836083245" ixy="0.0" ixz="0.0" iyy="0.128541836083245" iyz="0.0" izz="0.014504399999999999"/>
+    </inertial>
+  </link>
+  <link name="forearm_link">
+    <visual>
+      <origin rpy="1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.007"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/forearm.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.007"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/forearm.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.846"/>
+      <origin rpy="0 1.5707963267948966 0" xyz="-0.1961 0.0 0.007"/>
+      <inertia ixx="0.03904256026963631" ixy="0.0" ixz="0.0" iyy="0.03904256026963631" iyz="0.0" izz="0.005122799999999999"/>
+    </inertial>
+  </link>
+  <link name="wrist_1_link">
+    <visual>
+      <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.127"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/wrist1.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.127"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/wrist1.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.37"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.0028769988492000002" ixy="0.0" ixz="0.0" iyy="0.0028769988492000002" iyz="0.0" izz="0.0024660000000000003"/>
+    </inertial>
+  </link>
+  <link name="wrist_2_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.0997"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/wrist2.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.0997"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/wrist2.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.3"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.002729998908" ixy="0.0" ixz="0.0" iyy="0.002729998908" iyz="0.0" izz="0.00234"/>
+    </inertial>
+  </link>
+  <link name="wrist_3_link">
+    <visual>
+      <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.0989"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/visual/wrist3.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="1.5707963267948966 0 0" xyz="0 0 -0.0989"/>
+      <geometry>
+        <mesh filename="file://$(find mobis_description)/meshes/ur5e/collision/wrist3.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.365"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.0229"/>
+      <inertia ixx="0.00019212345231725498" ixy="0.0" ixz="0.0" iyy="0.00019212345231725498" iyz="0.0" izz="0.000256640625"/>
+    </inertial>
+  </link>
+
+  <!-- joints - main serial chain -->
+  <joint name="base_link-base_link_inertia" type="fixed">
+    <parent link="manipulator_base_link"/>
+    <child link="base_link_inertia"/>
+    <!-- 'base_link' is REP-103 aligned (so X+ forward), while the internal
+           frames of the robot/controller have X+ pointing backwards.
+           Use the joint between 'base_link' and 'base_link_inertia' (a dummy
+           link/frame) to introduce the necessary rotation over Z (of pi rad).
+      -->
+    <origin rpy="0 0 3.141592653589793" xyz="0 0 0.45"/>
+  </joint>
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link_inertia"/>
+    <child link="shoulder_link"/>
+    <origin rpy="0 0 1.8695723968953363e-08" xyz="0 0 0.16258455947480513"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793"/>
+    <dynamics damping="0" friction="1"/>
+  </joint>
+  <joint name="shoulder_lift_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin rpy="1.5701408851288337 0 1.0210113409900194e-06" xyz="0.00013335179160609334 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793"/>
+    <dynamics damping="0" friction="1"/>
+  </joint>
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin rpy="0.0001799592027532107 0.001241275946803214 8.55587706800472e-06" xyz="-0.4252124233712935 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="150.0" lower="-3.141592653589793" upper="3.141592653589793" velocity="3.141592653589793"/>
+    <dynamics damping="0" friction="1"/>
+  </joint>
+  <joint name="wrist_1_joint" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_1_link"/>
+    <origin rpy="3.131204703987734 -3.1413352302507778 3.141578445532854" xyz="-0.39230368625865447 0.001391814012579689 0.1339786966839976"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793"/>
+    <dynamics damping="0" friction="1"/>
+  </joint>
+  <joint name="wrist_2_joint" type="revolute">
+    <parent link="wrist_1_link"/>
+    <child link="wrist_2_link"/>
+    <origin rpy="1.5696721701649137 0 1.675713016124902e-07" xyz="4.9367340298403284e-05 -0.09971070011633423 0.00011209049183332505"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793"/>
+    <dynamics damping="0" friction="1"/>
+  </joint>
+  <joint name="wrist_3_joint" type="revolute">
+    <parent link="wrist_2_link"/>
+    <child link="wrist_3_link"/>
+    <origin rpy="1.5715671116943335 3.141592653589793 3.141592583375878" xyz="1.8290371242860403e-05 0.09946641137854012 7.666722307467283e-05"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793"/>
+    <dynamics damping="0" friction="1"/>
+  </joint>
+  <link name="ft_frame"/>
+  <joint name="wrist_3_link-ft_frame" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="ft_frame"/>
+    <origin rpy="3.141592653589793 0 0" xyz="0 0 0"/>
+  </joint>
+  <!-- ROS-Industrial 'base' frame - base_link to UR 'Base' Coordinates transform -->
+  <link name="base"/>
+  <joint name="base_link-base_fixed_joint" type="fixed">
+    <!-- Note the rotation over Z of pi radians - as base_link is REP-103
+           aligned (i.e., has X+ forward, Y+ left and Z+ up), this is needed
+           to correctly align 'base' with the 'Base' coordinate system of
+           the UR controller.
+      -->
+    <origin rpy="0 0 3.141592653589793" xyz="0 0 0"/>
+    <parent link="manipulator_base_link"/>
+    <child link="base"/>
+  </joint>
+  <!-- ROS-Industrial 'flange' frame - attachment point for EEF models -->
+  <link name="flange"/>
+  <joint name="wrist_3-flange" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="flange"/>
+    <origin rpy="0 -1.5707963267948966 -1.5707963267948966" xyz="0 0 0"/>
+  </joint>
+  <!-- ROS-Industrial 'tool0' frame - all-zeros tool frame -->
+  <link name="tool0"/>
+  <joint name="flange-tool0" type="fixed">
+    <!-- default toolframe - X+ left, Y+ up, Z+ front -->
+    <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0 0 0"/>
+    <parent link="flange"/>
+    <child link="tool0"/>
+  </joint>
+
+
+
+ <ros2_control name="GazeboSim" type="system">
+
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+
+      <joint name="shoulder_pan_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="shoulder_lift_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="elbow_joint">
+      <command_interface name="position">
+        <param name="min">-3.141592653589793</param>
+        <param name="max">3.141592653589793</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="wrist_1_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.2</param>
+        <param name="max">3.2</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="wrist_2_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.2</param>
+        <param name="max">3.2</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+    <joint name="wrist_3_joint">
+      <command_interface name="position">
+        <param name="min">-6.283185307179586</param>
+        <param name="max">6.283185307179586</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.2</param>
+        <param name="max">3.2</param>
+      </command_interface>
+      <state_interface name="position">
+        <!-- initial position for the mock system and simulation -->
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="effort">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    </ros2_control>
+ 
+<gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters> /home/harco/mobis_ws/src/mobis_description/config/ur5e.yaml</parameters>
+    </plugin>
+
+    <!-- <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control_effort">
+      <parameters> /home/son/robot_ws/src/mobis_ros2_humble/mobis_description/config/effort.yaml</parameters>
+    </plugin> -->
+
+
+  </gazebo>
+
+
+</robot>
