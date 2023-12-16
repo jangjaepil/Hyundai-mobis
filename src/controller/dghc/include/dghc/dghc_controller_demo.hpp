@@ -16,7 +16,7 @@ public:
     // void priority_input_callback(const std_msgs::String::ConstPtr& priority_input_string);
     // void mass_callback(const geometry_msgs::Inertia& mass_matrix);
     // std::vector<double> getDesiredAlphas(priorityTuples priority);
-    // void getModel();
+    void getModel();
     // void getJacobian();
     // void getWrench();
     // void setInertia();

@@ -15,6 +15,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3)
+find_package(kdl_parser REQUIRED)
 
 include_directories(
   include/dghc
@@ -28,7 +29,7 @@ add_executable(dghc_demo
 target_link_libraries (dghc_demo Eigen3::Eigen)
 
 
-ament_target_dependencies(dghc_demo rclcpp std_msgs geometry_msgs)
+ament_target_dependencies(dghc_demo rclcpp std_msgs geometry_msgs kdl_parser)
 
 install(
   TARGETS dghc_demo

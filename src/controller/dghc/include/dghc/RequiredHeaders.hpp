@@ -8,4 +8,6 @@
 #include "std_msgs/msg/string.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+
+#include <kdl_parser/kdl_parser.hpp>
 #pragma once
