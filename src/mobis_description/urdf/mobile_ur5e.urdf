@@ -1234,10 +1234,12 @@
   <gazebo reference="base_link">
     <selfCollide>false</selfCollide> 
   </gazebo>
+
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
       <parameters>/home/jang/mobis_ws/src/mobis_description/config/mobile_manipulator_controller_ur5e.yaml</parameters>
     </plugin>
+    
     <plugin name="ros2_linkpose_plugin" filename="libros2_linkpose_plugin.so" >
       <link>base_link</link>
     </plugin>

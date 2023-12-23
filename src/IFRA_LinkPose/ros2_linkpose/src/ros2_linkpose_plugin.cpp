@@ -124,6 +124,7 @@ void ROS2LinkPosePluginPrivate::OnUpdate()
   
 	// GET LinkPose from GAZEBO API, and assign it to pose_msg_:
 	ignition::math::Pose3d CurrentPose = link_->WorldPose();
+  
 
 	// ASSIGN VALUES:
 	pose_msg_.x = CurrentPose.Pos().X();

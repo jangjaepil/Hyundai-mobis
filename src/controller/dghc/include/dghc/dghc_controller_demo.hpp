@@ -39,5 +39,9 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
+
+
+    KDL::Chain kdl_chain_;
+
     size_t count_;
 };

@@ -10,4 +10,6 @@
 #include "geometry_msgs/msg/pose.hpp"
 
 #include <kdl_parser/kdl_parser.hpp>
+#include <urdf/model.h>
+#include <kdl/chain.hpp>
 #pragma once
