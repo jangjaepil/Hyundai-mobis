@@ -92,7 +92,28 @@ public:
         M.diagonal() << M_, M_, M_,M_ori_,M_ori_,M_ori_;
         D.diagonal() << D_,D_,D_,0.2 *D_,0.2 *D_,0.2 *D_;
         K.diagonal() << K_,K_,K_,0.2 *K_,0.2 *K_,0.2 *K_; 
-        W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_;
+        W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,100*W_,100*W_,100*W_,100*W_,100*W_,100*W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
+
+        Jacobian_mobile_inv <<   1,  0,  0,   0,  0, -Ly,  //ref:mobile_base   
+                        0,  1,  0,   0,  0,  Lx,
+                        1,  0,  0,   0,  0,  Ly,
+                        0,  1,  0,   0,  0,  Lx,
+                        1,  0,  0,   0,  0,  Ly,
+                        0,  1,  0,   0,  0, -Lx,
+                        1,  0,  0,   0,  0, -Ly,
+                        0,  1,  0,   0,  0, -Lx,
+                        0,  0, -1,  Ly, Lx,   0,  
+                        0,  0, -1,- Ly, Lx,   0,  
+                        0,  0, -1,- Ly,-Lx,   0,  
+                        0,  0, -1,  Ly,-Lx,   0;  
+        
+        Jacobian_mobile << 0.25,0,0.25,0,0.25,0,0.25,0,0,0,0,0, //ref :mobile_base     x
+                            0,0.25,0,0.25,0,0.25,0,0.25,0,0,0,0,
+                            0,0,0,0,0,0,0,0, -0.25   , -0.25    , -0.25    , -0.25,
+                            0,0,0,0,0,0,0,0,1/(4*Ly),-1/(4*Ly),-1/(4*Ly),1/(4*Ly),
+                            0,0,0,0,0,0,0,0,1/(4*Lx),1/(4*Lx),-1/(4*Lx),-1/(4*Lx), 
+                            1/(4*Ly),0,-1/(4*Ly),0,-1/(4*Ly),0,1/(4*Ly),0,0,0,0,0;
+ 
     }
 
 
@@ -243,7 +264,7 @@ public:
 
                 // x_d value
                 Eigen::VectorXd init_position = init_end_effector_TF.block(0,3,3,1); 
-                desire_position << init_position(0), init_position(1), init_position(2);
+                desire_position << init_position(0), init_position(1), init_position(2)-0.5;
 
                 init_flag = false;
             }
@@ -295,28 +316,37 @@ public:
             KDL::Jacobian J_arm(joint_size); 
             jac_solver.JntToJac(q, J_arm);
             Jacobian_arm = wRm_e*J_arm.data;
-            Jacobian_whole.block(0,0,6,6) = Eigen::MatrixXd::Identity(6,6);
-            Jacobian_whole.block(0,6,6,6) = Jacobian_arm;
+            std::cout<<"j_arm: "<<std::endl<<Jacobian_arm<<std::endl;
 
-            J = Jacobian_whole;
+            Jacobian_whole.block(0,0,6,12) = wRm_e*Jacobian_mobile;
+            Jacobian_whole.block(0,12,6,6) = Jacobian_arm;
+            Eigen::MatrixXd J = Jacobian_whole;
 
             //DPI 적용
-            Jacobian_arm_DPI_inverse = Jacobian_arm.transpose()*(Jacobian_arm *Jacobian_arm.transpose() + 0.01*Eigen::MatrixXd::Identity(6,6)).inverse();
-            //weighted dynamically consistent pseudo-inverse
-            // Aw = J.inverse().transpose()*M*W*M*J.inverse();
-            // Jw = W.inverse()*M.inverse()*J.transpose()*Aw*A.inverse();
+            //Jacobian_arm_DPI_inverse = Jacobian_arm.transpose()*(Jacobian_arm *Jacobian_arm.transpose() + 0.01*Eigen::MatrixXd::Identity(6,6)).inverse();
+            //std::cout<<"j DPI_inverse"<<std::endl<<Jacobian_arm_DPI_inverse<<std::endl;
+            //weighted pseudo-inverse
+            
+            Jw_inverse = W.inverse()*J.transpose()*(J*W.inverse()*J.transpose()).inverse();
+            std::cout<<"jW_inverse: "<<std::endl<<Jw_inverse<<std::endl;
 
 
             //velocity control을 위한 q_dot
-            desire_q_dot = Jw * desire_adm_vel;
+            desire_q_dot = Jw_inverse * desire_adm_vel;
 
             //vel_msg 생성
             std_msgs::msg::Float64MultiArray vel_msg;
-            vel_msg.data = {desire_q_dot[0],desire_q_dot[1],desire_q_dot[2],desire_q_dot[3],desire_q_dot[4],desire_q_dot[5]};
+            vel_msg.data = {desire_q_dot[12],desire_q_dot[13],desire_q_dot[14],desire_q_dot[15],desire_q_dot[16],desire_q_dot[17]};
             joint_vel_pub->publish(vel_msg);
 
-            
+            std::cout<<"d_q_dot: "<<desire_q_dot.transpose()<<std::endl;
             std_msgs::msg::Float64MultiArray wrench_msg;
+
+
+
+
+
+            
             wrench_msg.data = {ForceTorque[0],ForceTorque[1], ForceTorque[2],ForceTorque[3],ForceTorque[4],ForceTorque[5],
                             desire_q_dot[0],desire_q_dot[1],desire_q_dot[2],desire_q_dot[3],desire_q_dot[4],desire_q_dot[5]};
             wrench_pub->publish(wrench_msg);
@@ -383,7 +413,7 @@ private:
     Eigen::MatrixXd Aw = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd D = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd K = Eigen::MatrixXd::Identity(6,6);
-    Eigen::MatrixXd W = Eigen::MatrixXd::Identity(12,12);
+    Eigen::MatrixXd W = Eigen::MatrixXd::Identity(18,18);
     Eigen::VectorXd error =Eigen::VectorXd::Zero(6);
     Eigen::VectorXd current_position =Eigen::VectorXd::Zero(3);
     Eigen::VectorXd desire_position =Eigen::VectorXd::Zero(3);
@@ -395,11 +425,12 @@ private:
     Eigen::Quaterniond moible_quat;
     Eigen::VectorXd desire_adm_acc =Eigen::VectorXd::Zero(6);
     Eigen::VectorXd desire_adm_vel =Eigen::VectorXd::Zero(6);
-    Eigen::VectorXd desire_q_dot =Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd desire_q_dot =Eigen::VectorXd::Zero(18);
     Eigen::MatrixXd Jacobian_arm = Eigen::MatrixXd::Identity(6,6);
-    Eigen::MatrixXd Jacobian_whole = Eigen::MatrixXd::Zero(6,12);
-    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6,12);
-    Eigen::MatrixXd Jw = Eigen::MatrixXd::Zero(12,6);
+    Eigen::MatrixXd Jacobian_mobile = Eigen::MatrixXd::Identity(6,12);
+    Eigen::MatrixXd Jacobian_mobile_inv = Eigen::MatrixXd::Identity(12,6);
+    Eigen::MatrixXd Jacobian_whole = Eigen::MatrixXd::Zero(6,18);
+    Eigen::MatrixXd Jw_inverse = Eigen::MatrixXd::Zero(18,6);
     Eigen::MatrixXd Jacobian_arm_DPI_inverse = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd end_effector_tmp_TF;
     Eigen::MatrixXd end_effector_TF;
@@ -423,7 +454,8 @@ private:
     float JointPosition[6] = {init_base, init_shoulder,  init_elbow, init_wrist1, init_wrist2, init_wrist3};
     float JointVelocity[6] = {0.0};// initial pos error
     Eigen::VectorXd ForceTorque = Eigen::VectorXd::Zero(6);
-    
+    double Lx = 67.0/2.0;
+    double Ly = 46.0/2.0;
 
 
     std::string base_link;

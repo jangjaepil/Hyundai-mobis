@@ -972,7 +972,7 @@
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
-  <joint name="wrist_tool0" type="revolute">
+  <joint name="wrist_tool0" type="fixed">
     <parent link="wrist_3_link"/>
     <child link="tool0"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
