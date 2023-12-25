@@ -49,8 +49,8 @@ public:
         mobile_pos_sub = this->create_subscription<linkpose_msgs::msg::LinkPose>(
             "/LinkPose_mobile_ur5e_base_link", 100, std::bind(&EffortExtractor::mobile_pose_callback, this, std::placeholders::_1));
         //velocity control을 위한 q_dot, publisher
-        joint_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/ur5e_controller/commands", 100); //velocity controller
-
+        joint_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/ur5e_controller/commands", 100); //mani velocity controller
+        lift_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/lift_controller/commands", 100); //lift velocity controller
         //값을 확인하기 위한 publisher
         wrench_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/filter_check", 100); //velocity controller
 
@@ -92,25 +92,25 @@ public:
         M.diagonal() << M_, M_, M_,M_ori_,M_ori_,M_ori_;
         D.diagonal() << D_,D_,D_,0.2 *D_,0.2 *D_,0.2 *D_;
         K.diagonal() << K_,K_,K_,0.2 *K_,0.2 *K_,0.2 *K_; 
-        W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,100*W_,100*W_,100*W_,100*W_,100*W_,100*W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
+        W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,0.1*W_,0.1*W_,0.1*W_,0.1*W_,W_,W_,W_,W_,W_,W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
 
         Jacobian_mobile_inv <<   1,  0,  0,   0,  0, -Ly,  //ref:mobile_base   
-                        0,  1,  0,   0,  0,  Lx,
-                        1,  0,  0,   0,  0,  Ly,
-                        0,  1,  0,   0,  0,  Lx,
-                        1,  0,  0,   0,  0,  Ly,
-                        0,  1,  0,   0,  0, -Lx,
-                        1,  0,  0,   0,  0, -Ly,
-                        0,  1,  0,   0,  0, -Lx,
-                        0,  0, -1,  Ly, Lx,   0,  
-                        0,  0, -1,- Ly, Lx,   0,  
-                        0,  0, -1,- Ly,-Lx,   0,  
-                        0,  0, -1,  Ly,-Lx,   0;  
+                                 0,  1,  0,   0,  0,  Lx,
+                                 1,  0,  0,   0,  0,  Ly,
+                                 0,  1,  0,   0,  0,  Lx,
+                                 1,  0,  0,   0,  0,  Ly,
+                                 0,  1,  0,   0,  0, -Lx,
+                                 1,  0,  0,   0,  0, -Ly,
+                                 0,  1,  0,   0,  0, -Lx,
+                                 0,  0, -1,  Ly, Lx,   0,  
+                                 0,  0, -1,- Ly, Lx,   0,  
+                                 0,  0, -1,- Ly,-Lx,   0,  
+                                 0,  0, -1,  Ly,-Lx,   0;  
         
-        Jacobian_mobile << 0.25,0,0.25,0,0.25,0,0.25,0,0,0,0,0, //ref :mobile_base     x
+        Jacobian_mobile <<  0.25,0,0.25,0,0.25,0,0.25,0,0,0,0,0, //ref :mobile_base     x
                             0,0.25,0,0.25,0,0.25,0,0.25,0,0,0,0,
                             0,0,0,0,0,0,0,0, -0.25   , -0.25    , -0.25    , -0.25,
-                            0,0,0,0,0,0,0,0,1/(4*Ly),-1/(4*Ly),-1/(4*Ly),1/(4*Ly),
+                            0,0,0,0,0,0,0,0,1/(4*Ly),-1/(4*Ly),-1/(4*Ly),1/(4*Ly),                    //f_r,f_l,r_l,r_r
                             0,0,0,0,0,0,0,0,1/(4*Lx),1/(4*Lx),-1/(4*Lx),-1/(4*Lx), 
                             1/(4*Ly),0,-1/(4*Ly),0,-1/(4*Ly),0,1/(4*Ly),0,0,0,0,0;
  
@@ -264,7 +264,7 @@ public:
 
                 // x_d value
                 Eigen::VectorXd init_position = init_end_effector_TF.block(0,3,3,1); 
-                desire_position << init_position(0), init_position(1), init_position(2)-0.5;
+                desire_position << init_position(0), init_position(1), init_position(2) + 0.5;
 
                 init_flag = false;
             }
@@ -336,10 +336,13 @@ public:
 
             //vel_msg 생성
             std_msgs::msg::Float64MultiArray vel_msg;
+            std_msgs::msg::Float64MultiArray lift_msg;
             vel_msg.data = {desire_q_dot[12],desire_q_dot[13],desire_q_dot[14],desire_q_dot[15],desire_q_dot[16],desire_q_dot[17]};
+            lift_msg.data = {desire_q_dot[9],desire_q_dot[8],desire_q_dot[10],desire_q_dot[11]}; //f_l,f_r,r_l,r_r
             joint_vel_pub->publish(vel_msg);
-
-            std::cout<<"d_q_dot: "<<desire_q_dot.transpose()<<std::endl;
+            lift_vel_pub->publish(lift_msg);
+            std::cout<<"d_q_dot_lift: "<<desire_q_dot[8]<<", "<<desire_q_dot[9]<<", "<<desire_q_dot[10]<<", "<<desire_q_dot[11]<<", "<<std::endl;
+            
             std_msgs::msg::Float64MultiArray wrench_msg;
 
 
@@ -467,6 +470,7 @@ private:
 
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr wrench_pub;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_vel_pub; //velocity controller
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr lift_vel_pub; //velocity controller
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr subscription_;
     rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr wrench_sub;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr pos_sub;

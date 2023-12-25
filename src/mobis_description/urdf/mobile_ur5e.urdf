@@ -99,9 +99,9 @@
       xyz="0 0 1" />
     <limit
       lower="-0.25"
-      upper="0.2"
+      upper="0.0"
       effort="100000"
-      velocity="100" />
+      velocity="10" />
     
   </joint>
   <link
@@ -268,9 +268,9 @@
       xyz="0 0 1" />
     <limit
       lower="-0.25"
-      upper="0.2"
+      upper="0.0"
       effort="100000"
-      velocity="100" />
+      velocity="10" />
     
   </joint>
   <link
@@ -436,9 +436,9 @@
       xyz="0 0 1" />
     <limit
       lower="-0.25"
-      upper="0.2"
+      upper="0.0"
       effort="100000"
-      velocity="100" />
+      velocity="10" />
     
   </joint>
   <link
@@ -605,9 +605,9 @@
       xyz="0 0 1" />
     <limit
       lower="-0.25"
-      upper="0.2"
+      upper="0.0"
       effort="100000"
-      velocity="100" />
+      velocity="10" />
     
   </joint>
   <link
