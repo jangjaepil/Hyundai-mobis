@@ -20,8 +20,8 @@ public:
     // void mass_callback(const geometry_msgs::Inertia& mass_matrix);
     // std::vector<double> getDesiredAlphas(priorityTuples priority);
     void getModel();
-    // void getJacobian();
-    // void getWrench();
+    void getJacobian();
+    void getTwist();
     // void setInertia();
     // void setPriority();
     // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
@@ -56,7 +56,7 @@ private:
     double Ly = 0.3;
     int joint_size;
     bool init_joint_flag = 0;
-    
+    bool init_step = 0;
     Eigen::VectorXd q = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd q_dot = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd mobile_q = Eigen::VectorXd::Zero(12);
@@ -68,6 +68,7 @@ private:
     Eigen::MatrixXd end_effector_tmp_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::MatrixXd end_effector_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd end_position = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd d_end_position = Eigen::VectorXd::Zero(3);
     Eigen::MatrixXd mobile_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd mobile_position = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd mobile_twist = Eigen::VectorXd::Zero(6);
@@ -79,6 +80,7 @@ private:
     Eigen::Matrix3d mRe = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd mRe_e = Eigen::MatrixXd::Identity(6,6);
     Eigen::Quaterniond end_quat;
+    Eigen::Quaterniond d_end_quat;
     Eigen::Quaterniond mobile_quat;
     
 };

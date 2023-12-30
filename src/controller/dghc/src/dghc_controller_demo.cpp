@@ -192,6 +192,51 @@ void dghc_controller::getModel()
     //std::cout<<"end_position: "<<std::endl<<end_position.transpose()<<std::endl;
     std::cout<<"end_twist: "<<std::endl<<end_twist<<std::endl;
     KDL::ChainDynParam dyn_param(chain,KDL::Vector(0.0,0.0,-9.8));
+
+    if(init_step == 0) 
+    {
+        d_end_position = end_position;
+        d_end_quat = end_quat;
+        init_step =1;
+    }
+}
+
+
+void dghc_controller::getTwist()
+{
+    // error.head(3) = end_position - d_end_position;
+    // if(d_end_quat.coeffs().dot(current_quat.coeffs()) < 0.0)
+    // {
+    //     current_quat.coeffs() << -current_quat.coeffs();
+    // }
+    // Eigen::Quaterniond quat_rot_err (current_quat * d_end_quat.inverse());
+    // if(quat_rot_err.coeffs().norm() > 1e-3)
+    // {
+    //   quat_rot_err.coeffs() << quat_rot_err.coeffs()/quat_rot_err.coeffs().norm();
+    // }
+    // Eigen::AngleAxisd err_arm_des_orient(quat_rot_err);
+    // error.tail(3) << err_arm_des_orient.axis() * err_arm_des_orient.angle(); 
+    // Eigen::VectorXd coupling_wrench = Eigen::VectorXd::Zero(6);
+    // coupling_wrench = D * desire_adm_vel + K * error;
+    // desire_adm_acc = M.inverse() * (-coupling_wrench + ForceTorque);
+    // double a_acc_norm = (desire_adm_acc.segment(0, 3)).norm();
+    // double arm_max_acc_ = 1.0;
+    // if (a_acc_norm > arm_max_acc_) 
+    // {
+    //   desire_adm_acc.segment(0, 3) *= (arm_max_acc_ / a_acc_norm);
+    // }
+    // desire_adm_vel += desire_adm_acc * dt;
+    
+}
+
+void dghc_controller::getJacobian()
+{
+    std::vector<Eigen::MatrixXd> allJacobians;
+    allJacobians.push_back(Jacobian_whole); 
+    
+   setJacobianMatrices(allJacobians);
+//    std::cout<<"alljacobians:"<<std::endl<<allJacobians[0]<<std::endl;
+
 }
 
 int dghc_controller::run()
@@ -199,17 +244,18 @@ int dghc_controller::run()
     
     rclcpp::Rate loop_rate(100);
     std::cout<<rclcpp::ok()<<std::endl;
-
+    
     while(rclcpp::ok())
     {
         
         if(init_joint_flag ==1)
         {
+
             getModel();
+            
+            getTwist();
 
-            // getTwist();
-
-            // getJacobian();
+            getJacobian();
 
             // setPriority();
 
