@@ -60,6 +60,7 @@ ament_target_dependencies(ros2_linkpose_plugin
   "gazebo_msgs"
   "gazebo_ros"
   "linkpose_msgs"
+  
 )
 ament_export_libraries(ros2_linkpose_plugin)
 install(

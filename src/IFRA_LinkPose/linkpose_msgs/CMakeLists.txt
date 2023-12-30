@@ -43,6 +43,7 @@ install(
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LinkPose.msg"
+  "msg/LinkTwist.msg"
 )
 
 ament_package()

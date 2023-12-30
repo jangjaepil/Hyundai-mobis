@@ -5,7 +5,15 @@
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-  
+    auto DGHC_node = std::make_shared<dghc_controller>();
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(DGHC_node);
+    std::thread executor_thread([&executor]() { executor.spin(); });
+
+    
+    
+
+    
     enum TaskNum{
         JOINT_POSE=0,
         WHOLE_BODY_IMPEDANCE,
@@ -19,7 +27,7 @@ int main(int argc, char * argv[])
         JOINT_LIMIT6
     };
 
-    int DOFsize = 12;
+    int DOFsize = 18;
     int numTasks = 10;
     Eigen::VectorXd tasksize;
     tasksize = Eigen::VectorXd::Zero(numTasks);
@@ -35,9 +43,11 @@ int main(int argc, char * argv[])
     tasksize[JOINT_LIMIT5] = 1;
     tasksize[JOINT_LIMIT6] = 1; 
     
-    dghc_controller force_node;
-    force_node.init(numTasks, tasksize, DOFsize);
-    force_node.run();
+    
+    DGHC_node->init(numTasks, tasksize, DOFsize);
+    DGHC_node->run();
+    
+    executor_thread.join();
     rclcpp::shutdown();
     
     return 0;

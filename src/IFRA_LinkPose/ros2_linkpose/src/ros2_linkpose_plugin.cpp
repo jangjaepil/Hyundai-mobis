@@ -39,7 +39,7 @@
 
 #include "ros2_linkpose/ros2_linkpose_plugin.hpp"           // Header file.
 #include <linkpose_msgs/msg/link_pose.hpp>                  // ROS2 Message.
-
+#include <linkpose_msgs/msg/link_twist.hpp>  
 #include <memory>
 
 namespace gazebo_ros
@@ -61,7 +61,9 @@ public:
   // PUBLISH LinkPose:
   void PublishStatus();                                                          // Method to publish LinkPose.
   rclcpp::Publisher<linkpose_msgs::msg::LinkPose>::SharedPtr pose_pub_;          // Publisher.
-  linkpose_msgs::msg::LinkPose pose_msg_;                                        // LinkPose.
+  rclcpp::Publisher<linkpose_msgs::msg::LinkTwist>::SharedPtr twist_pub_;  
+  linkpose_msgs::msg::LinkPose pose_msg_;   
+  linkpose_msgs::msg::LinkTwist twist_msg_;                                       // LinkPose.
 
   // WORLD UPDATE event:
   void OnUpdate();
@@ -93,9 +95,11 @@ void ROS2LinkPosePlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr 
 	std::string modelname = impl_->model_->GetName();
   std::string linkname = _sdf->GetElement("link")->Get<std::string>();
 	std::string topicname = "LinkPose_" + modelname + "_" + linkname;
-
+  std::string topicname2 = "LinkTwist_" + modelname + "_" + linkname;
 	impl_->pose_msg_.modelname = modelname;
   impl_->pose_msg_.linkname = linkname;
+  impl_->twist_msg_.modelname = modelname;
+  impl_->twist_msg_.linkname = linkname;
 
   // GET LINK:
   impl_->link_ = impl_->model_->GetLink(linkname);
@@ -107,7 +111,7 @@ void ROS2LinkPosePlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr 
 
   // Create LinkPose publisher:
   impl_->pose_pub_ = impl_->ros_node_->create_publisher<linkpose_msgs::msg::LinkPose>(topicname, 10);
-
+  impl_->twist_pub_ = impl_->ros_node_->create_publisher<linkpose_msgs::msg::LinkTwist>(topicname2, 10);
   double publish_rate = 100.0;
   impl_->update_ns_ = int((1/publish_rate) * 1e9);
   impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
@@ -122,11 +126,12 @@ void ROS2LinkPosePlugin::Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr 
 void ROS2LinkPosePluginPrivate::OnUpdate()
 {
   
-	// GET LinkPose from GAZEBO API, and assign it to pose_msg_:
+	// GET LinkPose from GAZEBO API, and assign it to pose_msg_,twist_msg_:
 	ignition::math::Pose3d CurrentPose = link_->WorldPose();
-  
-
-	// ASSIGN VALUES:
+  ignition::math::Vector3d CurrentLinearVel = link_->WorldLinearVel();
+	ignition::math::Vector3d CurrentAngularVel = link_->WorldAngularVel();
+  //std::cout<<"CurrentLinearVel: "<<std::endl<<CurrentLinearVel<<std::endl;
+  // ASSIGN VALUES:
 	pose_msg_.x = CurrentPose.Pos().X();
 	pose_msg_.y = CurrentPose.Pos().Y();
 	pose_msg_.z = CurrentPose.Pos().Z();
@@ -134,6 +139,14 @@ void ROS2LinkPosePluginPrivate::OnUpdate()
 	pose_msg_.qy = CurrentPose.Rot().Y();
 	pose_msg_.qz = CurrentPose.Rot().Z();
   pose_msg_.qw = CurrentPose.Rot().W();
+    twist_msg_.x = CurrentLinearVel.X();
+    twist_msg_.y = CurrentLinearVel.Y();
+    twist_msg_.z = CurrentLinearVel.Z();
+    twist_msg_.roll = CurrentLinearVel.X();
+    twist_msg_.pitch = CurrentLinearVel.Y();
+    twist_msg_.yaw = CurrentLinearVel.Z();
+
+
 
   // Publish status at rate:
   rclcpp::Time now = ros_node_->get_clock()->now();
@@ -147,6 +160,7 @@ void ROS2LinkPosePluginPrivate::OnUpdate()
 void ROS2LinkPosePluginPrivate::PublishStatus(){
   
   pose_pub_->publish(pose_msg_);
+  twist_pub_->publish(twist_msg_);
 
 }
 

@@ -14,6 +14,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(linkpose_msgs REQUIRED)
 find_package(Eigen3)
 find_package(kdl_parser REQUIRED)
 find_package(urdf REQUIRED)
@@ -30,7 +32,7 @@ add_executable(dghc_demo
 target_link_libraries (dghc_demo Eigen3::Eigen)
 
 
-ament_target_dependencies(dghc_demo rclcpp std_msgs geometry_msgs kdl_parser urdf) 
+ament_target_dependencies(dghc_demo rclcpp std_msgs sensor_msgs geometry_msgs linkpose_msgs kdl_parser urdf) 
 
 install(
   TARGETS dghc_demo

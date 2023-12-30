@@ -92,7 +92,7 @@ public:
         M.diagonal() << M_, M_, M_,M_ori_,M_ori_,M_ori_;
         D.diagonal() << D_,D_,D_,0.2 *D_,0.2 *D_,0.2 *D_;
         K.diagonal() << K_,K_,K_,0.2 *K_,0.2 *K_,0.2 *K_; 
-        W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,0.1*W_,0.1*W_,0.1*W_,0.1*W_,W_,W_,W_,W_,W_,W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
+        W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
 
         Jacobian_mobile_inv <<   1,  0,  0,   0,  0, -Ly,  //ref:mobile_base   
                                  0,  1,  0,   0,  0,  Lx,
@@ -102,7 +102,7 @@ public:
                                  0,  1,  0,   0,  0, -Lx,
                                  1,  0,  0,   0,  0, -Ly,
                                  0,  1,  0,   0,  0, -Lx,
-                                 0,  0, -1,  Ly, Lx,   0,  
+                                 0,  0, -1,  Ly, Lx,   0,   //f_r,f_l,r_l,r_r
                                  0,  0, -1,- Ly, Lx,   0,  
                                  0,  0, -1,- Ly,-Lx,   0,  
                                  0,  0, -1,  Ly,-Lx,   0;  
@@ -131,27 +131,67 @@ public:
 
     void mobile_pose_callback(const linkpose_msgs::msg::LinkPose Pose_Data)
     {
-    
-        moible_position(0) = Pose_Data.x;
-        moible_position(1) = Pose_Data.y;
-        moible_position(2) = Pose_Data.z;
-        moible_quat.x() = Pose_Data.qx;
-        moible_quat.y() = Pose_Data.qy;
-        moible_quat.z() = Pose_Data.qz;
-        moible_quat.w() = Pose_Data.qw;
+        
+        wRm_past = wRm;
+        mobile_position_past = mobile_position;
+        
+        mobile_position(0) = Pose_Data.x;
+        mobile_position(1) = Pose_Data.y;
+        mobile_position(2) = Pose_Data.z;
+        mobile_quat.x() = Pose_Data.qx;
+        mobile_quat.y() = Pose_Data.qy;
+        mobile_quat.z() = Pose_Data.qz;
+        mobile_quat.w() = Pose_Data.qw;
 
-        wRm = moible_quat.normalized().toRotationMatrix();
+        wRm = mobile_quat.normalized().toRotationMatrix();
         
         wRm_e.block(0,0,3,3) = wRm;
         wRm_e.block(3,3,3,3) = wRm;
 
-        moible_TF.block(0,0,3,3) = wRm;
-        moible_TF.block(0,3,3,1) = moible_position;
+        mobile_TF.block(0,0,3,3) = wRm;
+        mobile_TF.block(0,3,3,1) = mobile_position;
         
-        //std::cout<<"mobile TF: "<<moible_TF<<std::endl;
+        //std::cout<<"mobile TF: "<<mobile_TF<<std::endl;
 
     }
-    
+    Eigen::VectorXd mobile_pose_impedance_force(double& dt)
+    {   
+        Eigen::Matrix3d wRd  = Eigen::Matrix3d::Identity(3,3);
+        Eigen::Matrix3d cRd = wRm.transpose()*wRd;
+        Eigen::Quaterniond m_quat(cRd);
+        Eigen::VectorXd desired_orientation = Eigen::VectorXd::Zero(3);
+        desired_orientation << m_quat.x(),m_quat.y(),m_quat.z();
+        
+        Eigen::Matrix3d pastRc = wRm_past.transpose()*wRm;
+        Eigen::AngleAxisd angleAxis(pastRc);
+        double theta_d = angleAxis.angle()/dt;
+        Eigen::VectorXd axis = angleAxis.axis();
+        Eigen::VectorXd mobile_twist = Eigen::VectorXd::Zero(6);
+
+        mobile_twist << (mobile_position - mobile_position_past)/dt,wRm_past*(theta_d*axis);
+            
+       
+        Eigen::VectorXd desired_mobile_position = Eigen::VectorXd::Zero(3);
+        desired_mobile_position<<0,0,0.3;
+        
+        Eigen::VectorXd desired_mobile_pose = Eigen::VectorXd::Zero(6);
+        desired_mobile_pose<<desired_mobile_position,wRm*desired_orientation;
+       
+        Eigen::MatrixXd k = Eigen::MatrixXd::Identity(6,6);
+        Eigen::MatrixXd b = Eigen::MatrixXd::Identity(6,6);
+        k.diagonal()<<100,100,100,10,10,10;
+        b.diagonal()<<10,10,10,1,1,1;
+        std::cout<<"mobile_twist: "<<std::endl<<mobile_twist.transpose()<<std::endl;
+        Eigen::VectorXd wrench = Eigen::VectorXd::Zero(6);
+        wrench = k*desired_mobile_pose - b*mobile_twist;
+        
+        std::cout<<"torque: "<<std::endl<<wrench.transpose()<<std::endl;
+        wrench = wRm_e.transpose()*wrench;
+        return wrench;
+
+
+    }
+    //done
 
     void joint_states_callback(const sensor_msgs::msg::JointState::ConstPtr& JointState_Data)
     {
@@ -254,7 +294,7 @@ public:
 
                 //초기 위치의 transformation matrix
                 end_effector_tmp_TF = KDLFrameToEigenFrame(init_end_effector_pose);
-                init_end_effector_TF = moible_TF*end_effector_tmp_TF;                      
+                init_end_effector_TF = mobile_TF*end_effector_tmp_TF;                      
                 //desired rotation matrix 구하기
                 Eigen::Matrix3d Rd =Eigen::MatrixXd::Identity(3,3);
                 Rd = init_end_effector_TF.block<3, 3>(0, 0);
@@ -287,7 +327,7 @@ public:
             
             //Compute now transformation matrix
             end_effector_tmp_TF = KDLFrameToEigenFrame(end_effector_pose);
-            end_effector_TF = moible_TF*end_effector_tmp_TF;
+            end_effector_TF = mobile_TF*end_effector_tmp_TF;
             
             current_position = end_effector_TF.block(0,3,3,1);
             
@@ -305,14 +345,34 @@ public:
             //loop 도는데 걸리는 시간 측정
             dt = (rclcpp::Clock{}.now() - last_update_time).seconds();
             last_update_time = rclcpp::Clock{}.now();
-
+           
 
             compute_admittance(M,D,K,
                             current_position, desire_position,
                             current_quat, desire_quat, ForceTorque,
                             desire_adm_vel, desire_adm_acc, dt);
+
+            // Eigen::VectorXd virtual_toq = mobile_pose_impedance_force(dt);
+           
+            // mobile_M.diagonal() <<10,10,10,10,10,10;
+            // mobile_B.diagonal() <<10,10,10,10,10,10;
+
+            // Eigen::MatrixXd temp = mobile_M + dt*mobile_B;
             
-            //geometric jacobian
+            
+            // std::cout<<"past_vel: "<<std::endl<<past_vel.transpose()<<std::endl;
+            // std::cout<<"virtual_toq: "<<std::endl<<virtual_toq.transpose()<<std::endl;
+            // std::cout<<"temp.inverse(): "<<std::endl<<temp.inverse()<<std::endl;
+            // //past_vel<<0,0,0;
+            // vel = temp.inverse()*(mobile_M*past_vel + dt*virtual_toq); //roll,pitch,yaw
+            
+            // Eigen::VectorXd lift_vel = Eigen::VectorXd::Zero(4);
+            // std::cout<<"vel: "<<std::endl<<vel.transpose()<<std::endl;
+            // Eigen::VectorXd mobile_vels = Eigen::VectorXd::Zero(12);
+
+            // mobile_vels = Jacobian_mobile_inv*vel; //f_r,f_l,r_l,r_r
+            // lift_vel = mobile_vels.block(8,0,4,1);
+            // //geometric jacobian
             KDL::Jacobian J_arm(joint_size); 
             jac_solver.JntToJac(q, J_arm);
             Jacobian_arm = wRm_e*J_arm.data;
@@ -320,28 +380,29 @@ public:
 
             Jacobian_whole.block(0,0,6,12) = wRm_e*Jacobian_mobile;
             Jacobian_whole.block(0,12,6,6) = Jacobian_arm;
-            Eigen::MatrixXd J = Jacobian_whole;
-
+            
+            
+            std::cout<<"Jacobian_whole: "<<std::endl<<Jacobian_whole<<std::endl;
             //DPI 적용
             //Jacobian_arm_DPI_inverse = Jacobian_arm.transpose()*(Jacobian_arm *Jacobian_arm.transpose() + 0.01*Eigen::MatrixXd::Identity(6,6)).inverse();
             //std::cout<<"j DPI_inverse"<<std::endl<<Jacobian_arm_DPI_inverse<<std::endl;
             //weighted pseudo-inverse
-            
+            Eigen::MatrixXd J = Jacobian_whole;
             Jw_inverse = W.inverse()*J.transpose()*(J*W.inverse()*J.transpose()).inverse();
             std::cout<<"jW_inverse: "<<std::endl<<Jw_inverse<<std::endl;
 
 
             //velocity control을 위한 q_dot
             desire_q_dot = Jw_inverse * desire_adm_vel;
-
+            
             //vel_msg 생성
             std_msgs::msg::Float64MultiArray vel_msg;
             std_msgs::msg::Float64MultiArray lift_msg;
             vel_msg.data = {desire_q_dot[12],desire_q_dot[13],desire_q_dot[14],desire_q_dot[15],desire_q_dot[16],desire_q_dot[17]};
-            lift_msg.data = {desire_q_dot[9],desire_q_dot[8],desire_q_dot[10],desire_q_dot[11]}; //f_l,f_r,r_l,r_r
+            lift_msg.data = {desire_q_dot[8],desire_q_dot[9],desire_q_dot[10],desire_q_dot[11]}; //f_l,f_r,r_l,r_r
             joint_vel_pub->publish(vel_msg);
             lift_vel_pub->publish(lift_msg);
-            std::cout<<"d_q_dot_lift: "<<desire_q_dot[8]<<", "<<desire_q_dot[9]<<", "<<desire_q_dot[10]<<", "<<desire_q_dot[11]<<", "<<std::endl;
+            // std::cout<<"d_q_dot_lift: "<<desired_q_dot[1]<<", "<<desired_q_dot[0]<<", "<<desired_q_dot[2]<<", "<<desired_q_dot[3]<<", "<<std::endl;
             
             std_msgs::msg::Float64MultiArray wrench_msg;
 
@@ -356,7 +417,7 @@ public:
             
             std::cout << "current_position" << std::endl << current_position.transpose() << std::endl;
             std::cout << "current_quat" << std::endl << current_quat.coeffs() << std::endl;
-
+            past_vel = vel;
             loop_rate.sleep();
         }
     }
@@ -409,9 +470,11 @@ private:
     double force_x_fold = 0.0;
     double force_y_fold = 0.0;
     double force_z_fold = 0.0;
-
-    
-    
+    Eigen::VectorXd mobile_position_past = Eigen::VectorXd::Zero(3);
+    Eigen::MatrixXd mobile_M = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd mobile_B = Eigen::MatrixXd::Identity(6,6);
+    Eigen::VectorXd vel = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd past_vel = Eigen::VectorXd::Zero(6);
     Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd Aw = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd D = Eigen::MatrixXd::Identity(6,6);
@@ -420,12 +483,12 @@ private:
     Eigen::VectorXd error =Eigen::VectorXd::Zero(6);
     Eigen::VectorXd current_position =Eigen::VectorXd::Zero(3);
     Eigen::VectorXd desire_position =Eigen::VectorXd::Zero(3);
-    Eigen::VectorXd moible_position =Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd mobile_position =Eigen::VectorXd::Zero(3);
     Eigen::VectorXd q_vec = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd q_dot_vec = Eigen::VectorXd::Zero(6);
     Eigen::Quaterniond current_quat;
     Eigen::Quaterniond desire_quat;
-    Eigen::Quaterniond moible_quat;
+    Eigen::Quaterniond mobile_quat;
     Eigen::VectorXd desire_adm_acc =Eigen::VectorXd::Zero(6);
     Eigen::VectorXd desire_adm_vel =Eigen::VectorXd::Zero(6);
     Eigen::VectorXd desire_q_dot =Eigen::VectorXd::Zero(18);
@@ -437,8 +500,9 @@ private:
     Eigen::MatrixXd Jacobian_arm_DPI_inverse = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd end_effector_tmp_TF;
     Eigen::MatrixXd end_effector_TF;
-    Eigen::MatrixXd moible_TF = Eigen::MatrixXd::Identity(4,4);
+    Eigen::MatrixXd mobile_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::Matrix3d wRm = Eigen::MatrixXd::Identity(3,3);
+    Eigen::Matrix3d wRm_past = Eigen::MatrixXd::Identity(3,3);
     Eigen::MatrixXd wRm_e = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd init_end_effector_TF;
     KDL::Frame end_effector_pose;
@@ -489,6 +553,7 @@ Eigen::MatrixXd KDLFrameToEigenFrame(const KDL::Frame& Frame)
 
     return TF;
 }
+
 
 int main(int argc, char **argv)
 {

@@ -181,8 +181,8 @@ void GHCProjections::setNumTasks(unsigned int numTasks){
     for(unsigned int i=0; i<numTasks; i++){
         for(unsigned int j=0; j<numTasks; j++){
             if (j>i){
-                tmp(i,j) = 0.0;
-                tmp(j,i) = 0.0;
+                tmp(i,j) = 0.5;
+                tmp(j,i) = 0.5;
             }
         }
     }
