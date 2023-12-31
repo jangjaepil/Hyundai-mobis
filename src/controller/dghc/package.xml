@@ -14,12 +14,16 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>kdl_parser</build_depend>
   <build_depend>urdf</build_depend>
+  <build_depend>osqp</build_depend>
+  <build_depend>osqp-eigen</build_depend>
 
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>kdl_parser</exec_depend>
   <exec_depend>urdf</exec_depend>
+  <exec_depend>osqp</exec_depend>
+  <exec_depend>osqp-eigen</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

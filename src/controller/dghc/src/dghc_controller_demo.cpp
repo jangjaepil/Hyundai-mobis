@@ -45,50 +45,50 @@ void dghc_controller::timer_callback()
     
 }
 
-void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState::ConstPtr& JointState_Data)
+void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState& JointState_Data)
 {   
         //q
-        q(0) = JointState_Data->position[0];
-        q(1) = JointState_Data->position[1];
-        q(2) = JointState_Data->position[2];
-        q(3) = JointState_Data->position[3];
-        q(4) = JointState_Data->position[13];
-        q(5) = JointState_Data->position[16];
+        q(0) = JointState_Data.position[0];
+        q(1) = JointState_Data.position[1];
+        q(2) = JointState_Data.position[2];
+        q(3) = JointState_Data.position[3];
+        q(4) = JointState_Data.position[13];
+        q(5) = JointState_Data.position[16];
 
         //q_dot
-        q_dot(0) = JointState_Data->velocity[0];
-        q_dot(1) = JointState_Data->velocity[1];
-        q_dot(2) = JointState_Data->velocity[2];
-        q_dot(3) = JointState_Data->velocity[3];
-        q_dot(4) = JointState_Data->velocity[13];
-        q_dot(5) = JointState_Data->velocity[16];
+        q_dot(0) = JointState_Data.velocity[0];
+        q_dot(1) = JointState_Data.velocity[1];
+        q_dot(2) = JointState_Data.velocity[2];
+        q_dot(3) = JointState_Data.velocity[3];
+        q_dot(4) = JointState_Data.velocity[13];
+        q_dot(5) = JointState_Data.velocity[16];
 
-        mobile_q(0) = JointState_Data->position[10]; //   rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r), 
-        mobile_q(1) = JointState_Data->position[12];
-        mobile_q(2) = JointState_Data->position[9];
-        mobile_q(3) = JointState_Data->position[8];
-        mobile_q(4) = JointState_Data->position[11];
-        mobile_q(5) = JointState_Data->position[17];
-        mobile_q(6) = JointState_Data->position[14];
-        mobile_q(7) = JointState_Data->position[5];
-        mobile_q(8) = JointState_Data->position[7];
-        mobile_q(9) = JointState_Data->position[15];
-        mobile_q(10) = JointState_Data->position[6];
-        mobile_q(11) = JointState_Data->position[4];
+        mobile_q(0) = JointState_Data.position[10]; //   rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r), 
+        mobile_q(1) = JointState_Data.position[12];
+        mobile_q(2) = JointState_Data.position[9];
+        mobile_q(3) = JointState_Data.position[8];
+        mobile_q(4) = JointState_Data.position[11];
+        mobile_q(5) = JointState_Data.position[17];
+        mobile_q(6) = JointState_Data.position[14];
+        mobile_q(7) = JointState_Data.position[5];
+        mobile_q(8) = JointState_Data.position[7];
+        mobile_q(9) = JointState_Data.position[15];
+        mobile_q(10) = JointState_Data.position[6];
+        mobile_q(11) = JointState_Data.position[4];
 
 
-        mobile_q_dot(0) = JointState_Data->velocity[10]; // rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r)
-        mobile_q_dot(1) = JointState_Data->velocity[12];
-        mobile_q_dot(2) = JointState_Data->velocity[9];
-        mobile_q_dot(3) = JointState_Data->velocity[8];
-        mobile_q_dot(4) = JointState_Data->velocity[11];
-        mobile_q_dot(5) = JointState_Data->velocity[17];
-        mobile_q_dot(6) = JointState_Data->velocity[14];
-        mobile_q_dot(7) = JointState_Data->velocity[5];
-        mobile_q_dot(8) = JointState_Data->velocity[7];
-        mobile_q_dot(9) = JointState_Data->velocity[15];
-        mobile_q_dot(10) = JointState_Data->velocity[6];
-        mobile_q_dot(11) = JointState_Data->velocity[4];
+        mobile_q_dot(0) = JointState_Data.velocity[10]; // rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r)
+        mobile_q_dot(1) = JointState_Data.velocity[12];
+        mobile_q_dot(2) = JointState_Data.velocity[9];
+        mobile_q_dot(3) = JointState_Data.velocity[8];
+        mobile_q_dot(4) = JointState_Data.velocity[11];
+        mobile_q_dot(5) = JointState_Data.velocity[17];
+        mobile_q_dot(6) = JointState_Data.velocity[14];
+        mobile_q_dot(7) = JointState_Data.velocity[5];
+        mobile_q_dot(8) = JointState_Data.velocity[7];
+        mobile_q_dot(9) = JointState_Data.velocity[15];
+        mobile_q_dot(10) = JointState_Data.velocity[6];
+        mobile_q_dot(11) = JointState_Data.velocity[4];
         init_joint_flag =1;
         // mobileJointP
         // mobileJointV
@@ -234,7 +234,8 @@ void dghc_controller::getJacobian()
     std::vector<Eigen::MatrixXd> allJacobians;
     allJacobians.push_back(Jacobian_whole); 
     
-   setJacobianMatrices(allJacobians);
+    setJacobianMatrices(allJacobians);
+    qp_setJacobianMatrices(allJacobians);
 //    std::cout<<"alljacobians:"<<std::endl<<allJacobians[0]<<std::endl;
 
 }
@@ -252,17 +253,17 @@ int dghc_controller::run()
         {
 
             getModel();
-            
-            getTwist();
 
             getJacobian();
+
+            getTwist();
 
             // setPriority();
 
             // setInertia();
 
             // getProjectionM();
-
+            
             // getProjectedJointVel();
         }
         loop_rate.sleep();   

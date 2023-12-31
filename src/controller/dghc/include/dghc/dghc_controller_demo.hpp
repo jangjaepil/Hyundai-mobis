@@ -1,15 +1,16 @@
 
 #include "GHCProjections.hpp"
+#include "osqp_solver.hpp"
 #include "RequiredHeaders.hpp"
 #pragma once
 
 //순서대로, taskNumber, a_ii, a_ij
 typedef std::vector<std::tuple<int,double,double>> priorityTuples;
 
-class dghc_controller : public GHCProjections ,public rclcpp::Node{
+class dghc_controller : public GHCProjections,public qp_solver,public rclcpp::Node{
 public:
     dghc_controller();
-    void joint_states_callback(const sensor_msgs::msg::JointState::ConstPtr& JointState_Data);
+    void joint_states_callback(const sensor_msgs::msg::JointState& JointState_Data);
     void mobile_pose_callback(const linkpose_msgs::msg::LinkPose Pose_Data);
     void mobile_twist_callback(const linkpose_msgs::msg::LinkTwist Twist_Data);
     Eigen::MatrixXd KDLFrameToEigenFrame(const KDL::Frame& Frame);

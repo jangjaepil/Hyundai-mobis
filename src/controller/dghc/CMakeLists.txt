@@ -17,19 +17,22 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(linkpose_msgs REQUIRED)
 find_package(Eigen3)
+find_package(OsqpEigen REQUIRED)
 find_package(kdl_parser REQUIRED)
 find_package(urdf REQUIRED)
 
 include_directories(
+  ${catkin_INCLUDE_DIRS}
   include/dghc
   )
 
 add_executable(dghc_demo
   src/dghc_controller_demo.cpp
   src/dghc_demo.cpp
-  src/GHCProjections_demo.cpp)
+  src/GHCProjections_demo.cpp
+  src/qp_solver.cpp)
 
-target_link_libraries (dghc_demo Eigen3::Eigen)
+target_link_libraries (dghc_demo Eigen3::Eigen OsqpEigen::OsqpEigen)
 
 
 ament_target_dependencies(dghc_demo rclcpp std_msgs sensor_msgs geometry_msgs linkpose_msgs kdl_parser urdf) 
