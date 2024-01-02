@@ -1,50 +1,46 @@
 #include "osqp_solver.hpp"
-void qp_solver::qp_init(int numTasks, int DOFsize,std::vector<Eigen::MatrixXd>& Qr,std::vector<Eigen::MatrixXd>& Qi)
+void qp_solver::qp_init(int numTasks, int DOFsize,Eigen::VectorXd tasksize,Eigen::MatrixXd& Qr,Eigen::MatrixXd& Qi)
 {
     Nt = numTasks;
     Dof = DOFsize;
+    Ts = tasksize; 
     
-    hessian.resize(Dof*Nt,Dof*Nt);
-    gradient = Eigen::VectorXd::Zero(Dof*Nt);
-
     qp_setWeightMatrices(Qr,Qi);
-    qp_castDGHC2QPHessian(jacobian,Qr,Qi,hessian);
-    qp_castDGHC2QPGradient(jacobian,x_dot_d,gradient);
+    qp_castDGHC2QPHessian(Nt,Dof,Ts,Qr,Qi,hessian);
+    qp_castDGHC2QPGradient(gradient);
     // qp_setInEqualityConstrain();
     // qp_setEqualityConstraint();
 
 
     
 }
-void qp_solver::qp_setWeightMatrices(std::vector<Eigen::MatrixXd>& Qr,std::vector<Eigen::MatrixXd>& Qi)
+void qp_solver::qp_setWeightMatrices(Eigen::MatrixXd& allQr,Eigen::MatrixXd& allQi)
 { 
-    this-> Qr = Qr;
-    this-> Qi = Qi;
+    this-> Qr = allQr;
+    this-> Qi = allQi;
     
 }
-void qp_solver::qp_castDGHC2QPHessian(std::vector<Eigen::MatrixXd>& alljacobian, std::vector<Eigen::MatrixXd>& Qr,std::vector<Eigen::MatrixXd>& Qi,Eigen::SparseMatrix<double>& hessianMatrix)
+void qp_solver::qp_castDGHC2QPHessian(int& Nt, int& Dof,Eigen::VectorXd& Ts,Eigen::MatrixXd& Qr,Eigen::MatrixXd& Qi,Eigen::SparseMatrix<double>& hessianMatrix)
 {
-    Eigen::MatrixXd hessian;
-    hessian.resize(Dof*Nt,Dof*Nt);
-    for(int i = 0;i<Nt;i++)
-    {
-        hessian.block(i*Dof,i*Dof,Dof,Dof) = (alljacobian[i].transpose()*Qi[i]*alljacobian[i]) + Qr[i];  
+    hessianMatrix.resize(Nt*(Ts.sum()+Dof),Nt*(Ts.sum()+Dof));
+    for(int i = 0;i<Nt*(Ts.sum()+Dof);i++)
+    {   
+        if(i<(Nt*Ts.sum()))
+        { 
+
+            hessianMatrix.insert(i,i) = Qi(i,i);
+        }
+        else if(i<(Nt*(Ts.sum()+Dof)))
+        {
+            hessianMatrix.insert(i,i) = Qr(i,i);
+        }
     }
-
-   
-    hessianMatrix = hessian.sparseView();
-    hessianMatrix.makeCompressed();
-    std::cout<<"HessianMatrix: "<<std::endl<<hessianMatrix<<std::endl;
-
 }
 void qp_solver::qp_setJacobianMatrices(std::vector<Eigen::MatrixXd>& alljacobian)
 {
     this->jacobian = alljacobian;
 }
-void qp_solver::qp_castDGHC2QPGradient(std::vector<Eigen::MatrixXd>& alljacobian,std::vector<Eigen::VectorXd>& x_dot_d,Eigen::VectorXd& gradient)
+void qp_solver::qp_castDGHC2QPGradient(Eigen::VectorXd& gradient)
 {
-    for(int i =0 ;i<Nt;i++)
-    {
-        gradient.block(i*Dof,0,Dof,1) = -2*alljacobian[i]*x_dot_d[i];
-    }
+    gradient = Eigen::VectorXd::Zero(Dof*Nt+Ts.sum());    
 }
