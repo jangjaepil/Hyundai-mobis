@@ -9,10 +9,11 @@ public:
     void qp_init(int numTasks, int DOFsize,Eigen::VectorXd tasksize,Eigen::MatrixXd& Qr,Eigen::MatrixXd& Qi);
     void qp_setWeightMatrices(Eigen::MatrixXd& Qr,Eigen::MatrixXd& Qi);
     void qp_setJacobianMatrices(std::vector<Eigen::MatrixXd>& alljacobian);
+    void qp_setProjectionMatrices(std::vector<Eigen::MatrixXd>& allProjections);
     void qp_castDGHC2QPHessian(int& Nt, int& Dof,Eigen::VectorXd& Ts,Eigen::MatrixXd& Qr,Eigen::MatrixXd& Qi,Eigen::SparseMatrix<double>& hessianMatrix);
     void qp_castDGHC2QPGradient(Eigen::VectorXd& gradient);
-    void qp_setInEqualityConstrain();
-    void qp_setEqualityConstraint();
+    void qp_setLinearConstraint(std::vector<Eigen::MatrixXd>& allProjections,std::vector<Eigen::MatrixXd>& alljacobian,int& Nt, int& Dof,Eigen::SparseMatrix<double>& constraintMatrix);
+    void qp_setConstraintVectors();
     void qp_solve_problem();
     
 private:
@@ -27,6 +28,7 @@ private:
     Eigen::MatrixXd Qr;
     Eigen::MatrixXd Qi;
     std::vector<Eigen::MatrixXd> jacobian;
+    std::vector<Eigen::MatrixXd> Projections;
     std::vector<Eigen::VectorXd> x_dot_d;
     
       
