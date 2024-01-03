@@ -192,7 +192,7 @@ void dghc_controller::getModel()
     
     end_twist = Jacobian_arm*q_dot + mobile_twist;
     //std::cout<<"end_position: "<<std::endl<<end_position.transpose()<<std::endl;
-    std::cout<<"end_twist: "<<std::endl<<end_twist<<std::endl;
+    //std::cout<<"end_twist: "<<std::endl<<end_twist<<std::endl;
     KDL::ChainDynParam dyn_param(chain,KDL::Vector(0.0,0.0,-9.8));
 
     if(init_step == 0) 
@@ -300,13 +300,32 @@ void dghc_controller::getJacobian()
     
 //    std::cout<<"alljacobians:"<<std::endl<<allJacobians[0]<<std::endl;
 }
+void dghc_controller::getProjectionM()
+{
+    
+    allProjections.clear();
+    for(unsigned int i=0; i<numTasks; i++){
+        allProjections.push_back(Eigen::MatrixXd::Zero(Dof,Dof));
+    }
+  
+    Eigen::VectorXd ranks;
+    ranks = Eigen::VectorXd::Zero(numTasks);
+  
+     
+    bool ok = getAllGeneralizedProjectors(allProjections, ranks);
+}
 
 int dghc_controller::run()
 {   
     tasksize = getTasksize();
     numTasks = getNumTasks();
     Dof = getDOFsize();
-    rclcpp::Rate loop_rate(100);
+    
+    std::cout<<"dof: "<<Dof<<std::endl;
+    std::cout<<"numTasks: "<<numTasks<<std::endl;
+    std::cout<<"tasksize: "<<tasksize<<std::endl;
+
+    rclcpp::Rate loop_rate(1);
     bool qp_init_flag = 0;
     while(rclcpp::ok())
     {
@@ -317,23 +336,26 @@ int dghc_controller::run()
             getModel(); //update current q
 
             getJacobian(); //update jacobian matrix
-
+            
             getTwist(); //update x_dot_d
-
+            
             setPriority();
-
+            
             setInertia();
-
-            // getProjectionM(); //update_projection matrix
+            
+            getProjectionM(); //update_projection matrix
+            
             if(!qp_init_flag)
             {   
-                
-                qp_init(allq,allx_dot_d,allJacobians,allProjections,numTasks,getDOFsize(),tasksize);
+               
+                qp_init(allq,allx_dot_d,allJacobians,allProjections,numTasks,Dof,tasksize);
                 qp_init_flag =1;
+               
             }
             else
             {
                 qp_updateAllConstraint(allProjections,allJacobians,allx_dot_d,allq);
+                
             }
 
             if(!qp_solve_problem(allProjections))
@@ -342,9 +364,11 @@ int dghc_controller::run()
             }
             else
             {   
+                std::cout<<"6"<<std::endl;
                 desired_q_dot = getProjectedJointVel();
             }
-            
+
+            std::cout<<"desired_q: "<<desired_q_dot.transpose()<<std::endl;
             
         }
         loop_rate.sleep();   

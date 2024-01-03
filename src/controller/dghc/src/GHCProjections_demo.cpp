@@ -54,12 +54,12 @@ GHCProjections::GHCProjections() {
     this->chol = Eigen::LLT<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> >();
 }
 
-void GHCProjections::init(unsigned int numTasks, Eigen::VectorXd tasksize, unsigned int DOFsize) {
+void GHCProjections::init(unsigned int numTasks, Eigen::VectorXd tasksizeV, unsigned int DOFsize) {
     this->setNumTasks(numTasks);
-    this->setTasksize(tasksize);
+    this->setTasksize(tasksizeV);
     this->setDOFsize(DOFsize);
+    this->tasksize = tasksizeV;
     
-
     Jt = Eigen::MatrixXd::Zero(DOFsize,overallTasksize);
     Q = Eigen::MatrixXd::Zero(DOFsize,overallTasksize);
     R = Eigen::MatrixXd::Zero(overallTasksize,overallTasksize);
@@ -471,7 +471,7 @@ unsigned int GHCProjections::getDOFsize(){
 }
 
 Eigen::VectorXd GHCProjections::getTasksize(){
-    
+   
     return tasksize;
 }
 

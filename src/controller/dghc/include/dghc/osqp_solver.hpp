@@ -24,7 +24,7 @@ public:
 private:
     unsigned int Nt = 0;
     unsigned int Dof = 0;
-    double dt = 0;
+    double dt = 1;
 
     OsqpEigen::Solver solver;
     Eigen::VectorXd QPSolution;
@@ -40,7 +40,7 @@ private:
     Eigen::VectorXd current_q;
     Eigen::MatrixXd Qr;
     Eigen::MatrixXd Qi;
-    std::vector<Eigen::MatrixXd> jacobian;
+    std::vector<Eigen::MatrixXd> jacobians;
     std::vector<Eigen::MatrixXd> Projections;
     std::vector<Eigen::VectorXd> x_dot_d;
     

@@ -30,7 +30,7 @@ public:
     // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
     // void priorityFilter();
     // void changeAlphas(std::vector<double>& alphas,double t, double dt, double duration);
-    // void getProjectionM();
+    void getProjectionM();
     // void getProjectedToq();
     // bool alphasSetDone(const std::vector<double>& vec1, const std::vector<double>& vec2, double epsilon);
     int run();
@@ -53,7 +53,7 @@ private:
     KDL::Frame end_effector_pose;
     std::string urdf_filename;
     rclcpp::Time last_update_time = rclcpp::Clock{}.now();
-    double dt = 0.0;
+    double dt = 0;
     double Lx = 0.3;
     double Ly = 0.3;
     int joint_size;
