@@ -63,7 +63,7 @@ public:
     void showHierarchy();
     unsigned int getNumTasks();
     unsigned int getDOFsize();
-   
+    Eigen::VectorXd getTasksize();
 private:
     void setNumTasks(unsigned int numTasks);
     void setTasksize(Eigen::VectorXd tasksize);
@@ -81,6 +81,7 @@ private:
     bool checkOrthogonality(Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const & Mat, const double & threshold);
     std::vector<Eigen::MatrixXd> jacobian;
     std::vector<unsigned int> Tasksize;
+    Eigen::VectorXd tasksize;
     Eigen::MatrixXd alphas;
     Eigen::MatrixXd Jt;
     Eigen::MatrixXd Q;

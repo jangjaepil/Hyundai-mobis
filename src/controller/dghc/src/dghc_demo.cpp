@@ -43,8 +43,11 @@ int main(int argc, char * argv[])
     tasksize[JOINT_LIMIT5] = 1;
     tasksize[JOINT_LIMIT6] = 1; 
     
+    Eigen::MatrixXd Qi = Eigen::MatrixXd::Identity(tasksize.sum(),tasksize.sum());
+    Eigen::MatrixXd Qr = Eigen::MatrixXd::Identity(DOFsize,DOFsize);
     
     DGHC_node->init(numTasks, tasksize, DOFsize);
+    DGHC_node->qp_setWeightMatrices(Qr,Qi);
     DGHC_node->run();
     
     executor_thread.join();

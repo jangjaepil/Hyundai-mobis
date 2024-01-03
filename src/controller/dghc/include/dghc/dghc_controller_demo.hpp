@@ -23,8 +23,8 @@ public:
     void getModel();
     void getJacobian();
     void getTwist();
-    // void setInertia();
-    // void setPriority();
+    void setInertia();
+    void setPriority();
     // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
     // void setObstaclePrirority(const std::vector<int> obstacleTaskNums);
     // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
@@ -52,13 +52,17 @@ private:
     KDL::Chain chain;
     KDL::Frame end_effector_pose;
     std::string urdf_filename;
-
+    rclcpp::Time last_update_time = rclcpp::Clock{}.now();
+    double dt = 0.0;
     double Lx = 0.3;
     double Ly = 0.3;
     int joint_size;
     bool init_joint_flag = 0;
     bool init_step = 0;
+    unsigned int numTasks = 0;
+    unsigned int Dof = 0;
     Eigen::VectorXd q = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd allq = Eigen::VectorXd::Zero(18);
     Eigen::VectorXd q_dot = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd mobile_q = Eigen::VectorXd::Zero(12);
     Eigen::VectorXd mobile_q_dot = Eigen::VectorXd::Zero(12);
@@ -80,8 +84,14 @@ private:
     Eigen::MatrixXd wRe_e = Eigen::MatrixXd::Identity(6,6);
     Eigen::Matrix3d mRe = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd mRe_e = Eigen::MatrixXd::Identity(6,6);
+    Eigen::VectorXd desire_adm_vel = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd desired_q_dot;
     Eigen::Quaterniond end_quat;
     Eigen::Quaterniond d_end_quat;
     Eigen::Quaterniond mobile_quat;
+    Eigen::VectorXd tasksize;
+    std::vector<Eigen::MatrixXd> allJacobians;
+    std::vector<Eigen::MatrixXd> allProjections;
+    std::vector<Eigen::VectorXd> allx_dot_d;
     
 };

@@ -76,6 +76,8 @@ void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState& 
         mobile_q(10) = JointState_Data.position[6];
         mobile_q(11) = JointState_Data.position[4];
 
+        allq<<mobile_q,q;
+
 
         mobile_q_dot(0) = JointState_Data.velocity[10]; // rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r)
         mobile_q_dot(1) = JointState_Data.velocity[12];
@@ -146,7 +148,7 @@ void dghc_controller::getModel()
         Q_dot(i) = q_dot(i);
     }
     //std::cout<<"q: "<<std::endl<<q.transpose()<<std::endl;
-
+    
     ///////////////////////////////////////////// get jacobians ////////////////////////////////////////////////////////
     KDL::ChainJntToJacSolver jac_solver(chain);
     KDL::Jacobian J_arm(joint_size); 
@@ -204,67 +206,146 @@ void dghc_controller::getModel()
 
 void dghc_controller::getTwist()
 {
-    // error.head(3) = end_position - d_end_position;
-    // if(d_end_quat.coeffs().dot(current_quat.coeffs()) < 0.0)
-    // {
-    //     current_quat.coeffs() << -current_quat.coeffs();
-    // }
-    // Eigen::Quaterniond quat_rot_err (current_quat * d_end_quat.inverse());
-    // if(quat_rot_err.coeffs().norm() > 1e-3)
-    // {
-    //   quat_rot_err.coeffs() << quat_rot_err.coeffs()/quat_rot_err.coeffs().norm();
-    // }
-    // Eigen::AngleAxisd err_arm_des_orient(quat_rot_err);
-    // error.tail(3) << err_arm_des_orient.axis() * err_arm_des_orient.angle(); 
-    // Eigen::VectorXd coupling_wrench = Eigen::VectorXd::Zero(6);
-    // coupling_wrench = D * desire_adm_vel + K * error;
-    // desire_adm_acc = M.inverse() * (-coupling_wrench + ForceTorque);
-    // double a_acc_norm = (desire_adm_acc.segment(0, 3)).norm();
-    // double arm_max_acc_ = 1.0;
-    // if (a_acc_norm > arm_max_acc_) 
-    // {
-    //   desire_adm_acc.segment(0, 3) *= (arm_max_acc_ / a_acc_norm);
-    // }
-    // desire_adm_vel += desire_adm_acc * dt;
+    //loop 도는데 걸리는 시간 측정
+    dt = (rclcpp::Clock{}.now() - last_update_time).seconds();
+    last_update_time = rclcpp::Clock{}.now();
+    Eigen::VectorXd error = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd ForceTorque = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd desire_adm_acc = Eigen::VectorXd::Zero(6);
+    Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd D = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd K = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd W = Eigen::MatrixXd::Identity(18,18);
+    //임의의 Mass(M_,M_ori_), Damping(D_), Stiffness(K_)
+    double M_ = 5;
+    double M_ori_ = 0.3;
+    double D_ = 16;
+    double K_ = 40;
+    double W_ = 1;
+    
+    
+
+    M.diagonal() << M_, M_, M_,M_ori_,M_ori_,M_ori_;
+    D.diagonal() << D_,D_,D_,0.2 *D_,0.2 *D_,0.2 *D_;
+    K.diagonal() << K_,K_,K_,0.2 *K_,0.2 *K_,0.2 *K_; 
+    W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
+
+    error.head(3) = end_position - d_end_position;
+    if(d_end_quat.coeffs().dot(end_quat.coeffs()) < 0.0)
+    {
+        end_quat.coeffs() << -end_quat.coeffs();
+    }
+    Eigen::Quaterniond quat_rot_err (end_quat * d_end_quat.inverse());
+    if(quat_rot_err.coeffs().norm() > 1e-3)
+    {
+      quat_rot_err.coeffs() << quat_rot_err.coeffs()/quat_rot_err.coeffs().norm();
+    }
+    Eigen::AngleAxisd err_arm_des_orient(quat_rot_err);
+    error.tail(3) << err_arm_des_orient.axis() * err_arm_des_orient.angle(); 
+    Eigen::VectorXd coupling_wrench = Eigen::VectorXd::Zero(6);
+    coupling_wrench = D * desire_adm_vel + K * error;
+    desire_adm_acc = M.inverse() * (-coupling_wrench + ForceTorque);
+    double a_acc_norm = (desire_adm_acc.segment(0, 3)).norm();
+    double arm_max_acc_ = 1.0;
+    if (a_acc_norm > arm_max_acc_) 
+    {
+      desire_adm_acc.segment(0, 3) *= (arm_max_acc_ / a_acc_norm);
+    }
+    desire_adm_vel += desire_adm_acc * dt;
+
+    allx_dot_d.clear();
+    allx_dot_d.push_back(desire_adm_vel);
     
 }
 
+void dghc_controller::setPriority()
+{
+    //choose scalar priorities (between one and zero) for each pair of tasks -> there exists 0.5*(numTasks*numTasks+numTasks) pairs!
+    Eigen::VectorXd prioritiesVector;
+    prioritiesVector = Eigen::VectorXd::Zero(0.5*(numTasks*numTasks+numTasks));
+    //exampleA: strict hierachy with "task0" strict more important that "task1" and "task1" strict more important that "task2"
+    prioritiesVector[0] = 0.0;
+   
+    int counter=0;
+    for(unsigned int i=0; i<numTasks; i++){
+     for(unsigned int j=i; j<numTasks; j++){
+      if(prioritiesVector(counter) < 0){
+       std::cerr << " a( " << i << "," << j << ") = " << prioritiesVector(counter) << " < 0" << std::endl;
+       
+      }
+      if(prioritiesVector(counter) > 1){
+       std::cerr << " a( " << i << "," << j << ") = " << prioritiesVector(counter) << " > 1" << std::endl;
+       
+      }
+      setAlphaIJ(i,j,prioritiesVector(counter));
+      counter++;
+     }
+    }
+    assert(counter==prioritiesVector.size());
+
+}
+void dghc_controller::setInertia()
+{
+    Eigen::MatrixXd I10 = Eigen::MatrixXd::Identity(getDOFsize(),getDOFsize());
+    
+    setInertiaMatrix(I10);
+    // std::cout<<"W: "<<std::endl<<Weighted_wholeM<<std::endl;
+}
 void dghc_controller::getJacobian()
 {
-    std::vector<Eigen::MatrixXd> allJacobians;
+    allJacobians.clear();
     allJacobians.push_back(Jacobian_whole); 
     
     setJacobianMatrices(allJacobians);
-    qp_setJacobianMatrices(allJacobians);
+    
 //    std::cout<<"alljacobians:"<<std::endl<<allJacobians[0]<<std::endl;
-
 }
 
 int dghc_controller::run()
 {   
-    
+    tasksize = getTasksize();
+    numTasks = getNumTasks();
+    Dof = getDOFsize();
     rclcpp::Rate loop_rate(100);
-    std::cout<<rclcpp::ok()<<std::endl;
-    
+    bool qp_init_flag = 0;
     while(rclcpp::ok())
     {
         
         if(init_joint_flag ==1)
         {
 
-            getModel();
+            getModel(); //update current q
 
-            getJacobian();
+            getJacobian(); //update jacobian matrix
 
-            getTwist();
+            getTwist(); //update x_dot_d
 
-            // setPriority();
+            setPriority();
 
-            // setInertia();
+            setInertia();
 
-            // getProjectionM();
+            // getProjectionM(); //update_projection matrix
+            if(!qp_init_flag)
+            {   
+                
+                qp_init(allq,allx_dot_d,allJacobians,allProjections,numTasks,getDOFsize(),tasksize);
+                qp_init_flag =1;
+            }
+            else
+            {
+                qp_updateAllConstraint(allProjections,allJacobians,allx_dot_d,allq);
+            }
+
+            if(!qp_solve_problem(allProjections))
+            {
+                return 0;
+            }
+            else
+            {   
+                desired_q_dot = getProjectedJointVel();
+            }
             
-            // getProjectedJointVel();
+            
         }
         loop_rate.sleep();   
     }

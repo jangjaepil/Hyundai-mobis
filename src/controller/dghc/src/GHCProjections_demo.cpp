@@ -58,6 +58,7 @@ void GHCProjections::init(unsigned int numTasks, Eigen::VectorXd tasksize, unsig
     this->setNumTasks(numTasks);
     this->setTasksize(tasksize);
     this->setDOFsize(DOFsize);
+    
 
     Jt = Eigen::MatrixXd::Zero(DOFsize,overallTasksize);
     Q = Eigen::MatrixXd::Zero(DOFsize,overallTasksize);
@@ -246,14 +247,14 @@ double GHCProjections::getAlphaIJ(unsigned int i, unsigned int j){
     return alphas(i,j);
 }
 
-void GHCProjections::setTasksize(Eigen::VectorXd tasksize){
-    assert(tasksize.size() == numTasks);
-
+void GHCProjections::setTasksize(Eigen::VectorXd tasksizeV){
+    assert(tasksizeV.size() == numTasks);
+    this->tasksize = tasksizeV;
     Tasksize.clear();
     overallTasksize = 0;
     for(unsigned int taskNr=0; taskNr<numTasks; taskNr++){
-        Tasksize.push_back(tasksize(taskNr));
-        overallTasksize += tasksize(taskNr);
+        Tasksize.push_back(tasksizeV(taskNr));
+        overallTasksize += tasksizeV(taskNr);
     }
 }
 
@@ -467,5 +468,10 @@ unsigned int GHCProjections::getNumTasks(){
 
 unsigned int GHCProjections::getDOFsize(){
     return DOFsize;
+}
+
+Eigen::VectorXd GHCProjections::getTasksize(){
+    
+    return tasksize;
 }
 
