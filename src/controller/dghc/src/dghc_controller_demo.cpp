@@ -27,26 +27,38 @@ dghc_controller::dghc_controller() :Node("dghc_controller")
     joint_size = chain.getNrOfJoints();
     RCLCPP_INFO(rclcpp::get_logger("joint_size_logger"), "Joint size: %d", joint_size); // joint_size와 n 값이 다르면 chain에서 오류가 발생 -> 이를 확인하기 위함
    
-    publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
     timer_ = this->create_wall_timer(1ms, std::bind(&dghc_controller::timer_callback, this));
     joint_states_sub_  = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 100, std::bind(&dghc_controller::joint_states_callback, this, std::placeholders::_1));
     mobile_pos_sub_ = this->create_subscription<linkpose_msgs::msg::LinkPose>("/LinkPose_mobile_ur5e_base_link", 100, std::bind(&dghc_controller::mobile_pose_callback, this, std::placeholders::_1));
     mobile_twist_sub_ = this->create_subscription<linkpose_msgs::msg::LinkTwist>("/LinkTwist_mobile_ur5e_base_link", 100, std::bind(&dghc_controller::mobile_twist_callback, this, std::placeholders::_1));
+    joint_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/ur5e_controller/commands", 100); //mani velocity controller
+    lift_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/lift_controller/commands", 100); //lift velocity controller
+    wheel_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/mobile_controller/commands", 100); //lift velocity controller
 
 }
 
 void dghc_controller::timer_callback()
 {
     
-    // auto message = std_msgs::msg::String();
-    // message.data = "Hello, world! ";
-    // //RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
-    // publisher_->publish(message);
     
+    if(fisrt_loop)
+    {
+        std_msgs::msg::Float64MultiArray mani_vel_msg;
+        std_msgs::msg::Float64MultiArray lift_vel_msg;
+        std_msgs::msg::Float64MultiArray wheel_vel_msg;
+        
+        mani_vel_msg.data = {mani_q_vel_cmd(0),mani_q_vel_cmd(1),mani_q_vel_cmd(2),mani_q_vel_cmd(3),mani_q_vel_cmd(4),mani_q_vel_cmd(5)};
+        lift_vel_msg.data = {wheel_pr_vel_cmd(0),wheel_pr_vel_cmd(1),wheel_pr_vel_cmd(2),wheel_pr_vel_cmd(3)}; //f_r,f_l,r_l,r_r
+        wheel_vel_msg.data = {-wheel_ew_vel_cmd(0),wheel_ew_vel_cmd(1),-wheel_ew_vel_cmd(2),-wheel_ew_vel_cmd(3),wheel_ro_vel_cmd(0),wheel_ro_vel_cmd(1),wheel_ro_vel_cmd(2),wheel_ro_vel_cmd(3)};
+        joint_vel_pub->publish(mani_vel_msg);
+        lift_vel_pub->publish(lift_vel_msg);
+        wheel_vel_pub->publish(wheel_vel_msg);
+    }
 }
 
 void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState& JointState_Data)
 {   
+       
         //q
         q(0) = JointState_Data.position[0];
         q(1) = JointState_Data.position[1];
@@ -63,37 +75,42 @@ void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState& 
         q_dot(4) = JointState_Data.velocity[13];
         q_dot(5) = JointState_Data.velocity[16];
 
-        mobile_q(0) = JointState_Data.position[10]; //   rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r), 
-        mobile_q(1) = JointState_Data.position[12];
-        mobile_q(2) = JointState_Data.position[9];
-        mobile_q(3) = JointState_Data.position[8];
-        mobile_q(4) = JointState_Data.position[11];
-        mobile_q(5) = JointState_Data.position[17];
-        mobile_q(6) = JointState_Data.position[14];
-        mobile_q(7) = JointState_Data.position[5];
-        mobile_q(8) = JointState_Data.position[7];
-        mobile_q(9) = JointState_Data.position[15];
-        mobile_q(10) = JointState_Data.position[6];
-        mobile_q(11) = JointState_Data.position[4];
+        wheel_ro(0) = JointState_Data.position[10]; //   rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r), 
+        wheel_ro(1) = JointState_Data.position[12];     
+        wheel_ro(2) = JointState_Data.position[9];
+        wheel_ro(3) = JointState_Data.position[8];
+        
+        wheel_ew(0) = JointState_Data.position[11];
+        wheel_ew(1) = JointState_Data.position[17];
+        wheel_ew(2) = JointState_Data.position[14];
+        wheel_ew(3) = JointState_Data.position[5];
+        
+        wheel_pr(0) = JointState_Data.position[7];
+        wheel_pr(1) = JointState_Data.position[15];
+        wheel_pr(2) = JointState_Data.position[6];
+        wheel_pr(3) = JointState_Data.position[4];
+        
+        allq<<wheel_ro,wheel_ew,wheel_pr,q;
 
-        allq<<mobile_q,q;
 
-
-        mobile_q_dot(0) = JointState_Data.velocity[10]; // rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r)
-        mobile_q_dot(1) = JointState_Data.velocity[12];
-        mobile_q_dot(2) = JointState_Data.velocity[9];
-        mobile_q_dot(3) = JointState_Data.velocity[8];
-        mobile_q_dot(4) = JointState_Data.velocity[11];
-        mobile_q_dot(5) = JointState_Data.velocity[17];
-        mobile_q_dot(6) = JointState_Data.velocity[14];
-        mobile_q_dot(7) = JointState_Data.velocity[5];
-        mobile_q_dot(8) = JointState_Data.velocity[7];
-        mobile_q_dot(9) = JointState_Data.velocity[15];
-        mobile_q_dot(10) = JointState_Data.velocity[6];
-        mobile_q_dot(11) = JointState_Data.velocity[4];
+        wheel_ro_dot(0) = JointState_Data.velocity[10]; //   rotate(f_r,f_l,r_l,r_r),ew(f_r,f_l,r_l,r_r),prismatic(f_r,f_l,r_l,r_r), 
+        wheel_ro_dot(1) = JointState_Data.velocity[12];     
+        wheel_ro_dot(2) = JointState_Data.velocity[9];
+        wheel_ro_dot(3) = JointState_Data.velocity[8];
+        
+        wheel_ew_dot(0) = JointState_Data.velocity[11];
+        wheel_ew_dot(1) = JointState_Data.velocity[17];
+        wheel_ew_dot(2) = JointState_Data.velocity[14];
+        wheel_ew_dot(3) = JointState_Data.velocity[5];
+        
+        wheel_pr_dot(0) = JointState_Data.velocity[7];
+        wheel_pr_dot(1) = JointState_Data.velocity[15];
+        wheel_pr_dot(2) = JointState_Data.velocity[6];
+        wheel_pr_dot(3) = JointState_Data.velocity[4];
         init_joint_flag =1;
-        // mobileJointP
-        // mobileJointV
+
+        allq_dot<<wheel_ro_dot,wheel_ew_dot,wheel_pr_dot,q_dot;
+      
 }
 
 void dghc_controller::mobile_pose_callback(const linkpose_msgs::msg::LinkPose Pose_Data)
@@ -113,7 +130,7 @@ void dghc_controller::mobile_pose_callback(const linkpose_msgs::msg::LinkPose Po
 
         mobile_TF.block(0,0,3,3) = wRm;
         mobile_TF.block(0,3,3,1) = mobile_position;   
-        //std::cout<<"mobile pose: "<<std::endl<<mobile_position.transpose()<<std::endl;  
+      
 }
 
 void dghc_controller::mobile_twist_callback(const linkpose_msgs::msg::LinkTwist Twist_Data)
@@ -123,7 +140,8 @@ void dghc_controller::mobile_twist_callback(const linkpose_msgs::msg::LinkTwist 
         mobile_twist(2) = Twist_Data.z;
         mobile_twist(3) = Twist_Data.roll;
         mobile_twist(4) = Twist_Data.pitch;
-        mobile_twist(5) = Twist_Data.yaw;        
+        mobile_twist(5) = Twist_Data.yaw;   
+      
 }
 
 Eigen::MatrixXd dghc_controller::KDLFrameToEigenFrame(const KDL::Frame& Frame)
@@ -147,7 +165,6 @@ void dghc_controller::getModel()
         Q(i) = q(i);
         Q_dot(i) = q_dot(i);
     }
-    //std::cout<<"q: "<<std::endl<<q.transpose()<<std::endl;
     
     ///////////////////////////////////////////// get jacobians ////////////////////////////////////////////////////////
     KDL::ChainJntToJacSolver jac_solver(chain);
@@ -176,7 +193,7 @@ void dghc_controller::getModel()
     
     Jacobian_whole.block(0,0,6,12) = wRm_e*Jacobian_mobile;
     Jacobian_whole.block(0,12,6,6) = Jacobian_arm;
-    //std::cout<<"jacobian whole: "<<std::endl<<Jacobian_whole<<std::endl;
+    
 
     /////////////////////////////////////////// get end-effector pose & twsit /////////////////////////////////////////////////////
     KDL::ChainFkSolverPos_recursive fk_solver(chain);
@@ -191,8 +208,7 @@ void dghc_controller::getModel()
     end_quat = Eigen::Quaterniond(wRe);
     
     end_twist = Jacobian_arm*q_dot + mobile_twist;
-    //std::cout<<"end_position: "<<std::endl<<end_position.transpose()<<std::endl;
-    //std::cout<<"end_twist: "<<std::endl<<end_twist<<std::endl;
+    
     KDL::ChainDynParam dyn_param(chain,KDL::Vector(0.0,0.0,-9.8));
 
     if(init_step == 0) 
@@ -252,7 +268,7 @@ void dghc_controller::getTwist()
       desire_adm_acc.segment(0, 3) *= (arm_max_acc_ / a_acc_norm);
     }
     desire_adm_vel += desire_adm_acc * dt;
-
+  
     allx_dot_d.clear();
     allx_dot_d.push_back(desire_adm_vel);
     
@@ -302,7 +318,6 @@ void dghc_controller::getJacobian()
 }
 void dghc_controller::getProjectionM()
 {
-    
     allProjections.clear();
     for(unsigned int i=0; i<numTasks; i++){
         allProjections.push_back(Eigen::MatrixXd::Zero(Dof,Dof));
@@ -311,10 +326,100 @@ void dghc_controller::getProjectionM()
     Eigen::VectorXd ranks;
     ranks = Eigen::VectorXd::Zero(numTasks);
   
-     
-    bool ok = getAllGeneralizedProjectors(allProjections, ranks);
-}
+    getAllGeneralizedProjectors(allProjections, ranks);
 
+}
+void dghc_controller::model2realCmd(Eigen::VectorXd V)
+{
+ 
+    Eigen::VectorXd thetalist = Eigen::VectorXd::Zero(4);
+    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(2,2);
+
+    Eigen::VectorXd wfrV = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd wflV = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd wrlV = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd wrrV = Eigen::VectorXd::Zero(3);
+
+    Eigen::VectorXd u1 = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u2 = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u3 = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u4 = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u1_f = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u2_f = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u3_f = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd u4_f = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd wheel_ew_vel_f = Eigen::VectorXd::Zero(4);
+    
+    
+
+    R<<cos(0.01),-sin(0.01),
+         sin(0.01),cos(0.01);
+    
+    u1 << cos(wheel_ro(0)),sin(wheel_ro(0));
+    u2 << cos(wheel_ro(1)),sin(wheel_ro(1));
+    u3 << cos(wheel_ro(2)),sin(wheel_ro(2));
+    u4 << cos(wheel_ro(3)),sin(wheel_ro(3));
+    
+    u1_f = R*u1;
+    u2_f = R*u2;
+    u3_f = R*u3;
+    u4_f = R*u4;
+   
+    wheel_ew_vel_cmd << u1.transpose()*V.block(0,0,2,1),u2.transpose()*V.block(2,0,2,1),u3.transpose()
+                        *V.block(4,0,2,1),u4.transpose()*V.block(6,0,2,1); 
+  
+    wheel_ew_vel_f <<  u1_f.transpose()*V.block(0,0,2,1),u2_f.transpose()*V.block(2,0,2,1),u3_f.transpose()
+                        *V.block(4,0,2,1),u4_f.transpose()*V.block(6,0,2,1); 
+    const double tolerance = 1e-6;
+    if(V.isZero(tolerance))
+      {
+        thetalist << 0, 0, 0, 0;
+      }
+      else
+      { 
+        
+        for(short i=0;i<4;i++)
+        {
+            if(wheel_ew_vel_cmd(i)>0)
+            {
+            
+              if( abs(wheel_ew_vel_f(i))>abs(wheel_ew_vel_cmd(i)))
+              {
+                  thetalist(i)= acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+              }
+              else
+              {
+                  thetalist(i)= -acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+              }
+            }
+            else 
+            {
+               if(abs(wheel_ew_vel_f(i)) > abs(wheel_ew_vel_cmd(i)))
+              {
+                  thetalist(i)= M_PI - acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+              }
+              else
+              {
+                  thetalist(i)= -M_PI + acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+              }
+            }
+        }
+      }
+
+    
+    double p_gain = 1.5;
+    double d_gain = 0.1;
+    std::cout<<"thetalist: "<<thetalist.transpose()<<std::endl;
+    wheel_ro_vel_cmd = p_gain*thetalist-d_gain*wheel_ro_dot;
+    
+    if(isnan(wheel_ro_vel_cmd(0)))
+     wheel_ro_vel_cmd <<0,0,0,0;
+
+    wheel_pr_vel_cmd<<V.block(8,0,4,1);    
+    //wheel_pr_vel_cmd <<0,0,0,0; 
+    
+    mani_q_vel_cmd = V.block(12,0,6,1);
+}  
 int dghc_controller::run()
 {   
     tasksize = getTasksize();
@@ -325,29 +430,30 @@ int dghc_controller::run()
     std::cout<<"numTasks: "<<numTasks<<std::endl;
     std::cout<<"tasksize: "<<tasksize<<std::endl;
 
-    rclcpp::Rate loop_rate(1);
+    rclcpp::Rate loop_rate(1000);
     bool qp_init_flag = 0;
+    
     while(rclcpp::ok())
     {
         
         if(init_joint_flag ==1)
         {
-
-            getModel(); //update current q
-
-            getJacobian(); //update jacobian matrix
             
+            getModel(); //update current q
+            
+            getJacobian(); //update jacobian matrix
+           
             getTwist(); //update x_dot_d
             
             setPriority();
-            
+           
             setInertia();
-            
+           
             getProjectionM(); //update_projection matrix
             
             if(!qp_init_flag)
             {   
-               
+                
                 qp_init(allq,allx_dot_d,allJacobians,allProjections,numTasks,Dof,tasksize);
                 qp_init_flag =1;
                
@@ -364,12 +470,11 @@ int dghc_controller::run()
             }
             else
             {   
-                std::cout<<"6"<<std::endl;
-                desired_q_dot = getProjectedJointVel();
+               
+                model2realCmd(getProjectedJointVel());
             }
 
-            std::cout<<"desired_q: "<<desired_q_dot.transpose()<<std::endl;
-            
+            fisrt_loop = 1; 
         }
         loop_rate.sleep();   
     }

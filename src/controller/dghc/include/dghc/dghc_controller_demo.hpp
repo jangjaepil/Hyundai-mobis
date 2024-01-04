@@ -25,6 +25,7 @@ public:
     void getTwist();
     void setInertia();
     void setPriority();
+    void model2realCmd(Eigen::VectorXd V);
     // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
     // void setObstaclePrirority(const std::vector<int> obstacleTaskNums);
     // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
@@ -41,7 +42,9 @@ private:
     void timer_callback();
     
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_vel_pub;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr lift_vel_pub;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr wheel_vel_pub;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
     rclcpp::Subscription<linkpose_msgs::msg::LinkPose>::SharedPtr mobile_pos_sub_;
     rclcpp::Subscription<linkpose_msgs::msg::LinkTwist>::SharedPtr mobile_twist_sub_;
@@ -61,22 +64,38 @@ private:
     bool init_step = 0;
     unsigned int numTasks = 0;
     unsigned int Dof = 0;
+    bool fisrt_loop = 0;
+    
     Eigen::VectorXd q = Eigen::VectorXd::Zero(6);
-    Eigen::VectorXd allq = Eigen::VectorXd::Zero(18);
     Eigen::VectorXd q_dot = Eigen::VectorXd::Zero(6);
-    Eigen::VectorXd mobile_q = Eigen::VectorXd::Zero(12);
-    Eigen::VectorXd mobile_q_dot = Eigen::VectorXd::Zero(12);
+    
+    Eigen::VectorXd wheel_ro = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_ew = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_pr = Eigen::VectorXd::Zero(4);
+    
+    Eigen::VectorXd wheel_ro_dot = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_ew_dot = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_pr_dot = Eigen::VectorXd::Zero(4);
+    
+    Eigen::VectorXd allq = Eigen::VectorXd::Zero(18);
+    Eigen::VectorXd allq_dot = Eigen::VectorXd::Zero(18);
+
+      
     Eigen::MatrixXd Jacobian_arm = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd Jacobian_mobile = Eigen::MatrixXd::Identity(6,12);
     Eigen::MatrixXd Jacobian_mobile_inv = Eigen::MatrixXd::Identity(12,6);
     Eigen::MatrixXd Jacobian_whole = Eigen::MatrixXd::Identity(6,18);
+
     Eigen::MatrixXd end_effector_tmp_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::MatrixXd end_effector_TF = Eigen::MatrixXd::Identity(4,4);
+
     Eigen::VectorXd end_position = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd d_end_position = Eigen::VectorXd::Zero(3);
+
     Eigen::MatrixXd mobile_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd mobile_position = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd mobile_twist = Eigen::VectorXd::Zero(6);
+    
     Eigen::VectorXd end_twist = Eigen::VectorXd::Zero(6);
     Eigen::Matrix3d wRm = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd wRm_e = Eigen::MatrixXd::Identity(6,6);
@@ -85,7 +104,12 @@ private:
     Eigen::Matrix3d mRe = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd mRe_e = Eigen::MatrixXd::Identity(6,6);
     Eigen::VectorXd desire_adm_vel = Eigen::VectorXd::Zero(6);
-    Eigen::VectorXd desired_q_dot;
+    
+    Eigen::VectorXd wheel_ew_vel_cmd = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_ro_vel_cmd = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_pr_vel_cmd = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd mani_q_vel_cmd = Eigen::VectorXd::Zero(6);
+    
     Eigen::Quaterniond end_quat;
     Eigen::Quaterniond d_end_quat;
     Eigen::Quaterniond mobile_quat;
@@ -93,5 +117,7 @@ private:
     std::vector<Eigen::MatrixXd> allJacobians;
     std::vector<Eigen::MatrixXd> allProjections;
     std::vector<Eigen::VectorXd> allx_dot_d;
+    
+    
     
 };

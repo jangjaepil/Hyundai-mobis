@@ -9,8 +9,8 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     Ts = tasksize; 
     lbq = Eigen::VectorXd::Zero(Dof);
     ubq = Eigen::VectorXd::Zero(Dof);
-    lbq << -3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3;
-    ubq << 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3;
+    lbq << -OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-3,-3,-3,-3,-3,-3;  //
+    ubq << OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,3,3,3,3,3,3;
     ctr = Eigen::VectorXd::Zero(Dof);
     qp_setcurrent_q(init_q);
     qp_setRef(init_x_dot_d);
@@ -18,8 +18,7 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     qp_setProjectionMatrices(init_projections);
     qp_setWeightMatrices(Qr,Qi);
     std::cout<<"set variables"<<std::endl;
-    std::cout<<"jacobian: "<<std::endl<<jacobians[0]<<std::endl;
-    std::cout<<"projection: "<<std::endl<<init_projections[0]<<std::endl;
+  
     //////////////////// cast qp problem ///////////////////////////////////////////////
     qp_castDGHC2QPHessian(Nt,Dof,Ts,Qr,Qi,hessian);
     std::cout<<"set hessian"<< std::endl;
@@ -135,9 +134,9 @@ void qp_solver::qp_setConstraintVectors(double& dt, unsigned int& Nt, unsigned i
         upperBound.block(offset,0,Ts(i),1) = allx_dot_d[i];
         offset = offset + Ts(i);
     }
-        std::cout<<"current_q: "<<std::endl<<current_q.transpose()<<std::endl;
-        lowerBound.block(offset,0,Dof,1) = (lbq - current_q)/dt;
-        upperBound.block(offset,0,Dof,1) = (ubq - current_q)/dt;        
+        
+        lowerBound.block(offset,0,Dof,1) = lbq;
+        upperBound.block(offset,0,Dof,1) = ubq;        
 }
 
 bool qp_solver::qp_solve_problem(std::vector<Eigen::MatrixXd>&allProjections)
@@ -151,7 +150,7 @@ bool qp_solver::qp_solve_problem(std::vector<Eigen::MatrixXd>&allProjections)
     ctr.setZero();
     for(unsigned int i = 0;i<Nt;i++)
     {
-        ctr = ctr + allProjections[i]*QPSolution.block(Dof*i,0,Dof,1);
+        ctr = ctr + allProjections[i]*QPSolution.block(Ts.sum()+Dof*i,0,Dof,1);
     }
 
     return 1;

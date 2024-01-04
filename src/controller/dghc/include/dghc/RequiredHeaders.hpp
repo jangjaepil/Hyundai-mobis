@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <math.h>
 
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -11,6 +12,7 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <linkpose_msgs/msg/link_pose.hpp> 
 #include <linkpose_msgs/msg/link_twist.hpp>   
+#include "std_msgs/msg/float64_multi_array.hpp" 
 
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>

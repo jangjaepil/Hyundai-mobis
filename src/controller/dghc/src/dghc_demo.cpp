@@ -45,7 +45,8 @@ int main(int argc, char * argv[])
     
     Eigen::MatrixXd Qi = Eigen::MatrixXd::Identity(tasksize.sum(),tasksize.sum());
     Eigen::MatrixXd Qr = Eigen::MatrixXd::Identity(DOFsize,DOFsize);
-   
+    
+    Qr.diagonal() << 0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.1,0.1,0.1,0.1,0.1,0.1;
     DGHC_node->init(numTasks, tasksize, DOFsize);
     DGHC_node->qp_setWeightMatrices(Qr,Qi);
     DGHC_node->run();
