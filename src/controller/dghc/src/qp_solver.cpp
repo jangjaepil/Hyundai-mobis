@@ -9,8 +9,8 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     Ts = tasksize; 
     lbq = Eigen::VectorXd::Zero(Dof);
     ubq = Eigen::VectorXd::Zero(Dof);
-    lbq << -OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-OsqpEigen::INFTY,-3,-3,-3,-3,-3,-3;  //
-    ubq << OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,OsqpEigen::INFTY,3,3,3,3,3,3;
+    lbq << -10,-10,-10,-10,-10,-10,-10,-10,0,0,0,0,-3,-3,-3,-3,-3,-3;  //
+    ubq << 10,10,10,10,10,10,10,10,0,0,0,0,3,3,3,3,3,3;
     ctr = Eigen::VectorXd::Zero(Dof);
     qp_setcurrent_q(init_q);
     qp_setRef(init_x_dot_d);

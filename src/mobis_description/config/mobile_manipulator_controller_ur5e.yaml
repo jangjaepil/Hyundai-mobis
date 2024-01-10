@@ -44,3 +44,7 @@ lift_controller:
       - f_l_prismatic_joint
       - r_l_prismatic_joint
       - r_r_prismatic_joint
+    pid:
+      p: 100
+      i: 10
+      d: 1

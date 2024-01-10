@@ -13,7 +13,9 @@ public:
     void joint_states_callback(const sensor_msgs::msg::JointState& JointState_Data);
     void mobile_pose_callback(const linkpose_msgs::msg::LinkPose Pose_Data);
     void mobile_twist_callback(const linkpose_msgs::msg::LinkTwist Twist_Data);
+    void desired_pose_callback(const geometry_msgs::msg::Pose& d_Pose_Data);
     Eigen::MatrixXd KDLFrameToEigenFrame(const KDL::Frame& Frame);
+    
     // void obstacle_states_callback(const geometry_msgs::PoseArray::ConstPtr& obstacleState);
     // void desired_pose_callback(const geometry_msgs::Pose& dsired_pose);
     // void mode_input_callback(const std_msgs::Bool::ConstPtr& mode_input);
@@ -26,6 +28,8 @@ public:
     void setInertia();
     void setPriority();
     void model2realCmd(Eigen::VectorXd V);
+    void mobile_pose_estimation();
+    
     // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
     // void setObstaclePrirority(const std::vector<int> obstacleTaskNums);
     // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
@@ -45,10 +49,11 @@ private:
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_vel_pub;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr lift_vel_pub;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr wheel_vel_pub;
+    rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr estimated_mobile_pose_pub;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
     rclcpp::Subscription<linkpose_msgs::msg::LinkPose>::SharedPtr mobile_pos_sub_;
     rclcpp::Subscription<linkpose_msgs::msg::LinkTwist>::SharedPtr mobile_twist_sub_;
-
+    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_pose_sub;
     std::string base_link;
     std::string end_link;
     KDL::Tree tree;
@@ -56,6 +61,7 @@ private:
     KDL::Frame end_effector_pose;
     std::string urdf_filename;
     rclcpp::Time last_update_time = rclcpp::Clock{}.now();
+    rclcpp::Time last_estimate_time = rclcpp::Clock{}.now();
     double dt = 0;
     double Lx = 0.3;
     double Ly = 0.3;
@@ -110,6 +116,9 @@ private:
     Eigen::VectorXd wheel_pr_vel_cmd = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd mani_q_vel_cmd = Eigen::VectorXd::Zero(6);
     
+    Eigen::VectorXd estimated_mobile_vel = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd estimated_mobile_position = Eigen::VectorXd::Zero(3);
+   
     Eigen::Quaterniond end_quat;
     Eigen::Quaterniond d_end_quat;
     Eigen::Quaterniond mobile_quat;
