@@ -23,7 +23,7 @@ def generate_launch_description():
     world_file = PathJoinSubstitution(
         [FindPackageShare("mobis_description"),
         "world",
-        "empty.world"],
+        "stair.world"],
     )
     
     gazebo = IncludeLaunchDescription(

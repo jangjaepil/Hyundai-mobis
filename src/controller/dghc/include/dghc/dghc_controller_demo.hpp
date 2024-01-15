@@ -17,10 +17,7 @@ public:
     Eigen::MatrixXd KDLFrameToEigenFrame(const KDL::Frame& Frame);
     
     // void obstacle_states_callback(const geometry_msgs::PoseArray::ConstPtr& obstacleState);
-    // void desired_pose_callback(const geometry_msgs::Pose& dsired_pose);
-    // void mode_input_callback(const std_msgs::Bool::ConstPtr& mode_input);
     // void priority_input_callback(const std_msgs::String::ConstPtr& priority_input_string);
-    // void mass_callback(const geometry_msgs::Inertia& mass_matrix);
     // std::vector<double> getDesiredAlphas(priorityTuples priority);
     void getModel();
     void getJacobian();
@@ -29,14 +26,13 @@ public:
     void setPriority();
     void model2realCmd(Eigen::VectorXd V);
     void mobile_pose_estimation();
-    
+    void mobile_pose_estimation_kalman(double dt_estimate,Eigen::VectorXd mobile_acc);
     // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
     // void setObstaclePrirority(const std::vector<int> obstacleTaskNums);
     // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
     // void priorityFilter();
     // void changeAlphas(std::vector<double>& alphas,double t, double dt, double duration);
     void getProjectionM();
-    // void getProjectedToq();
     // bool alphasSetDone(const std::vector<double>& vec1, const std::vector<double>& vec2, double epsilon);
     int run();
     
@@ -65,6 +61,7 @@ private:
     double dt = 0;
     double Lx = 0.3;
     double Ly = 0.3;
+    double wheel_radius = 173/2; //mm
     int joint_size;
     bool init_joint_flag = 0;
     bool init_step = 0;
@@ -118,7 +115,29 @@ private:
     
     Eigen::VectorXd estimated_mobile_vel = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd estimated_mobile_position = Eigen::VectorXd::Zero(3);
-   
+    Eigen::VectorXd mobile_twist_last = Eigen::VectorXd::Zero(6);
+
+    Eigen::VectorXd X_kk = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd X_k_1_k = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd X_k_1_k_1 = Eigen::VectorXd::Zero(6);
+    
+    Eigen::MatrixXd P_kk = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd P_k_1_k = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd P_k_1_k_1 = Eigen::MatrixXd::Identity(6,6);
+    
+    Eigen::MatrixXd Fk = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd Bk = Eigen::MatrixXd::Zero(6,3);
+    Eigen::VectorXd Uk = Eigen::VectorXd::Zero(3);
+    
+    Eigen::VectorXd Yk = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd Zk = Eigen::VectorXd::Zero(6);
+    
+    Eigen::MatrixXd Hk = Eigen::MatrixXd::Identity(6,6);    //measurement model
+    Eigen::MatrixXd Qk = Eigen::MatrixXd::Identity(6,6);    //Process covariance  
+    Eigen::MatrixXd Rk = Eigen::MatrixXd::Identity(6,6);    //measurement noise covariance
+    Eigen::MatrixXd Sk = Eigen::MatrixXd::Identity(6,6);    //residual covariance
+    Eigen::MatrixXd Kk = Eigen::MatrixXd::Identity(6,6);    //kalman gain
+  
     Eigen::Quaterniond end_quat;
     Eigen::Quaterniond d_end_quat;
     Eigen::Quaterniond mobile_quat;
