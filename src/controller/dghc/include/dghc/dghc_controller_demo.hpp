@@ -14,6 +14,7 @@ public:
     void mobile_pose_callback(const linkpose_msgs::msg::LinkPose Pose_Data);
     void mobile_twist_callback(const linkpose_msgs::msg::LinkTwist Twist_Data);
     void desired_pose_callback(const geometry_msgs::msg::Pose& d_Pose_Data);
+    void desired_mobile_pose_callback(const geometry_msgs::msg::Pose& d_Mobile_Pose_Data);
     Eigen::MatrixXd KDLFrameToEigenFrame(const KDL::Frame& Frame);
     
     // void obstacle_states_callback(const geometry_msgs::PoseArray::ConstPtr& obstacleState);
@@ -27,6 +28,7 @@ public:
     void model2realCmd(Eigen::VectorXd V);
     void mobile_pose_estimation();
     void mobile_pose_estimation_kalman(double dt_estimate,Eigen::VectorXd mobile_acc);
+    
     // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
     // void setObstaclePrirority(const std::vector<int> obstacleTaskNums);
     // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
@@ -50,6 +52,8 @@ private:
     rclcpp::Subscription<linkpose_msgs::msg::LinkPose>::SharedPtr mobile_pos_sub_;
     rclcpp::Subscription<linkpose_msgs::msg::LinkTwist>::SharedPtr mobile_twist_sub_;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_pose_sub;
+    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_mobile_pose_sub;
+
     std::string base_link;
     std::string end_link;
     KDL::Tree tree;
@@ -61,7 +65,7 @@ private:
     double dt = 0;
     double Lx = 0.3;
     double Ly = 0.3;
-    double wheel_radius = 173/2; //mm
+    double wheel_radius = 0.001*(173/2); //m
     int joint_size;
     bool init_joint_flag = 0;
     bool init_step = 0;
@@ -75,7 +79,8 @@ private:
     Eigen::VectorXd wheel_ro = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_ew = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_pr = Eigen::VectorXd::Zero(4);
-    
+    Eigen::VectorXd thetalist = Eigen::VectorXd::Zero(4);
+
     Eigen::VectorXd wheel_ro_dot = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_ew_dot = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_pr_dot = Eigen::VectorXd::Zero(4);
@@ -88,6 +93,7 @@ private:
     Eigen::MatrixXd Jacobian_mobile = Eigen::MatrixXd::Identity(6,12);
     Eigen::MatrixXd Jacobian_mobile_inv = Eigen::MatrixXd::Identity(12,6);
     Eigen::MatrixXd Jacobian_whole = Eigen::MatrixXd::Identity(6,18);
+    Eigen::MatrixXd Jacobian_base  = Eigen::MatrixXd::Identity(2,18);
 
     Eigen::MatrixXd end_effector_tmp_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::MatrixXd end_effector_TF = Eigen::MatrixXd::Identity(4,4);
@@ -98,7 +104,8 @@ private:
     Eigen::MatrixXd mobile_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd mobile_position = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd mobile_twist = Eigen::VectorXd::Zero(6);
-    
+    Eigen::VectorXd d_mobile_twist = Eigen::VectorXd::Zero(2);
+
     Eigen::VectorXd end_twist = Eigen::VectorXd::Zero(6);
     Eigen::Matrix3d wRm = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd wRm_e = Eigen::MatrixXd::Identity(6,6);
@@ -140,6 +147,7 @@ private:
   
     Eigen::Quaterniond end_quat;
     Eigen::Quaterniond d_end_quat;
+    Eigen::Quaterniond d_mobile_quat;
     Eigen::Quaterniond mobile_quat;
     Eigen::VectorXd tasksize;
     std::vector<Eigen::MatrixXd> allJacobians;

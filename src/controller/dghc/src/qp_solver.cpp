@@ -9,14 +9,20 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     Ts = tasksize; 
     lbq = Eigen::VectorXd::Zero(Dof);
     ubq = Eigen::VectorXd::Zero(Dof);
-    lbq << -30,-30,-30,-30,-30,-30,-30,-30,0,0,0,0,-10,-10,-10,-10,-10,-10;  //
+    lbq << -30,-30,-30,-30,-30,-30,-30,-30,-0,-0,-0,-0,-10,-10,-10,-10,-10,-10;  //
     ubq << 30,30,30,30,30,30,30,30,0,0,0,0,10,10,10,10,10,10;
     ctr = Eigen::VectorXd::Zero(Dof);
+    
     qp_setcurrent_q(init_q);
+    std::cout<<"set init q"<<std::endl;
     qp_setRef(init_x_dot_d);
+    std::cout<<"set init ref"<<std::endl;
     qp_setJacobianMatrices(init_jacobians);
+    std::cout<<"set jacobians"<<std::endl;
     qp_setProjectionMatrices(init_projections);
+    std::cout<<"set projections"<<std::endl;
     qp_setWeightMatrices(Qr,Qi);
+    std::cout<<"set qr and qi"<<std::endl;
     std::cout<<"set variables"<<std::endl;
   
     //////////////////// cast qp problem ///////////////////////////////////////////////
@@ -58,6 +64,7 @@ void qp_solver::qp_setcurrent_q(Eigen::VectorXd& q)
 }
 void qp_solver::qp_setWeightMatrices(Eigen::MatrixXd& allQr,Eigen::MatrixXd& allQi)
 { 
+    
     this-> Qr = allQr;
     this-> Qi = allQi;
     

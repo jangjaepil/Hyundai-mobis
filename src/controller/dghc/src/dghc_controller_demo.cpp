@@ -36,6 +36,8 @@ dghc_controller::dghc_controller() :Node("dghc_controller")
     lift_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/lift_controller/commands", 100); //lift velocity controller
     wheel_vel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/mobile_controller/commands", 100); //lift velocity controller
     estimated_mobile_pose_pub = this -> create_publisher<geometry_msgs::msg::Pose>("/estimated_mobile_pose",100);
+    desired_mobile_pose_sub = this->create_subscription<geometry_msgs::msg::Pose>("/mobile_desired_pose", 100, std::bind(&dghc_controller::desired_mobile_pose_callback, this, std::placeholders::_1));
+    
     }
 
 void dghc_controller::timer_callback()
@@ -49,22 +51,30 @@ void dghc_controller::timer_callback()
         std_msgs::msg::Float64MultiArray wheel_vel_msg;
         geometry_msgs::msg::Pose estimated_mobile_pose_msg;
 
-        estimated_mobile_pose_msg.position.x = X_kk(0)*0.001;
-        estimated_mobile_pose_msg.position.y = X_kk(1)*0.001;
-        estimated_mobile_pose_msg.position.z = X_kk(2)*0.001;
-        estimated_mobile_pose_msg.orientation.x = 0;
-        estimated_mobile_pose_msg.orientation.y = 0;
-        estimated_mobile_pose_msg.orientation.z = 0;
-        estimated_mobile_pose_msg.orientation.w = 0;
+        estimated_mobile_pose_msg.position.x = desire_adm_vel(0);//X_kk(0)*0.001;
+        estimated_mobile_pose_msg.position.y = desire_adm_vel(1);//X_kk(1)*0.001;
+        estimated_mobile_pose_msg.position.z = desire_adm_vel(2);//X_kk(2)*0.001;
+        estimated_mobile_pose_msg.orientation.x = thetalist(0);
+        estimated_mobile_pose_msg.orientation.y = wheel_ro(0);
+        estimated_mobile_pose_msg.orientation.z = thetalist(3);
+        estimated_mobile_pose_msg.orientation.w = wheel_ro(3);
 
         mani_vel_msg.data = {mani_q_vel_cmd(0),mani_q_vel_cmd(1),mani_q_vel_cmd(2),mani_q_vel_cmd(3),mani_q_vel_cmd(4),mani_q_vel_cmd(5)};
         lift_vel_msg.data = {wheel_pr_vel_cmd(0),wheel_pr_vel_cmd(1),wheel_pr_vel_cmd(2),wheel_pr_vel_cmd(3)}; //f_r,f_l,r_l,r_r
-        wheel_vel_msg.data = {-wheel_ew_vel_cmd(0),wheel_ew_vel_cmd(1),-wheel_ew_vel_cmd(2),-wheel_ew_vel_cmd(3),wheel_ro_vel_cmd(0),wheel_ro_vel_cmd(1),wheel_ro_vel_cmd(2),wheel_ro_vel_cmd(3)};
+        wheel_vel_msg.data = {-wheel_ew_vel_cmd(0)/wheel_radius,wheel_ew_vel_cmd(1)/wheel_radius,-wheel_ew_vel_cmd(2)/wheel_radius,-wheel_ew_vel_cmd(3)/wheel_radius,wheel_ro_vel_cmd(0),wheel_ro_vel_cmd(1),wheel_ro_vel_cmd(2),wheel_ro_vel_cmd(3)};
         joint_vel_pub->publish(mani_vel_msg);
         lift_vel_pub->publish(lift_vel_msg);
         wheel_vel_pub->publish(wheel_vel_msg);
         estimated_mobile_pose_pub->publish(estimated_mobile_pose_msg);
     }
+}
+
+void dghc_controller::desired_mobile_pose_callback(const geometry_msgs::msg::Pose& d_Mobile_Pose_Data)
+{
+    d_mobile_quat.x() = d_Mobile_Pose_Data.orientation.x;
+    d_mobile_quat.y() = d_Mobile_Pose_Data.orientation.y;
+    d_mobile_quat.z() = d_Mobile_Pose_Data.orientation.z;
+    d_mobile_quat.w() = d_Mobile_Pose_Data.orientation.w;
 }
 //cartesian space desired position subscribe
 void dghc_controller::desired_pose_callback(const geometry_msgs::msg::Pose& d_Pose_Data)
@@ -72,10 +82,10 @@ void dghc_controller::desired_pose_callback(const geometry_msgs::msg::Pose& d_Po
     d_end_position(0) = d_Pose_Data.position.x;
     d_end_position(1) = d_Pose_Data.position.y;
     d_end_position(2) = d_Pose_Data.position.z;
-    // d_end_quat.x() = d_Pose_Data.orientation.x;
-    // d_end_quat.y() = d_Pose_Data.orientation.y;
-    // d_end_quat.z() = d_Pose_Data.orientation.z;
-    // d_end_quat.w() = d_Pose_Data.orientation.w;
+    d_end_quat.x() = d_Pose_Data.orientation.x;
+    d_end_quat.y() = d_Pose_Data.orientation.y;
+    d_end_quat.z() = d_Pose_Data.orientation.z;
+    d_end_quat.w() = d_Pose_Data.orientation.w;
     //std::cout<<"sub d_position: "<<std::endl<<d_end_position<<std::endl;
 }
 
@@ -159,10 +169,10 @@ void dghc_controller::mobile_pose_estimation()
 
     //std::cout<<"wheel_ew_dot: "<<std::endl<<wheel_ew_dot.transpose()<<std::endl;
     //std::cout<<"wheel_ro: "<<std::endl<<wheel_ro.transpose()<<std::endl;
-    v1.block(0,0,2,1) << -wheel_radius*wheel_ew_dot(0)*cos(wheel_ro(0)),-wheel_radius*wheel_ew_dot(0)*sin(wheel_ro(0)); // mm/s
-    v2.block(0,0,2,1) << wheel_radius*wheel_ew_dot(1)*cos(wheel_ro(1)),wheel_radius*wheel_ew_dot(1)*sin(wheel_ro(1));
-    v3.block(0,0,2,1) << -wheel_radius*wheel_ew_dot(2)*cos(wheel_ro(2)),-wheel_radius*wheel_ew_dot(2)*sin(wheel_ro(2));
-    v4.block(0,0,2,1) << -wheel_radius*wheel_ew_dot(3)*cos(wheel_ro(3)),-wheel_radius*wheel_ew_dot(3)*sin(wheel_ro(3));
+    v1.block(0,0,2,1) << -1000*wheel_radius*wheel_ew_dot(0)*cos(wheel_ro(0)),-1000*wheel_radius*wheel_ew_dot(0)*sin(wheel_ro(0)); // mm/s
+    v2.block(0,0,2,1) <<  1000*wheel_radius*wheel_ew_dot(1)*cos(wheel_ro(1)), 1000*wheel_radius*wheel_ew_dot(1)*sin(wheel_ro(1));
+    v3.block(0,0,2,1) << -1000*wheel_radius*wheel_ew_dot(2)*cos(wheel_ro(2)),-1000*wheel_radius*wheel_ew_dot(2)*sin(wheel_ro(2));
+    v4.block(0,0,2,1) << -1000*wheel_radius*wheel_ew_dot(3)*cos(wheel_ro(3)),-1000*wheel_radius*wheel_ew_dot(3)*sin(wheel_ro(3));
 
     //std::cout<<"v1: "<<std::endl<<v1.transpose()<<std::endl;
     //std::cout<<"v2: "<<std::endl<<v2.transpose()<<std::endl;
@@ -296,11 +306,11 @@ void dghc_controller::getModel()
                         0,0,0,0,0,0,0,0, -0.25   , -0.25    , -0.25    , -0.25,
                         0,0,0,0,0,0,0,0,1/(4*Ly),-1/(4*Ly),-1/(4*Ly),1/(4*Ly),                    //f_r,f_l,r_l,r_r
                         0,0,0,0,0,0,0,0,1/(4*Lx),1/(4*Lx),-1/(4*Lx),-1/(4*Lx), 
-                        1/(4*Ly),0,-1/(4*Ly),0,-1/(4*Ly),0,1/(4*Ly),0,0,0,0,0;
+                        1/(8*Ly),1/(8*Lx),-1/(8*Ly),1/(8*Lx),-1/(8*Ly),-1/(8*Lx),1/(8*Ly),-1/(8*Lx),0,0,0,0;
     
     Jacobian_whole.block(0,0,6,12) = wRm_e*Jacobian_mobile;
     Jacobian_whole.block(0,12,6,6) = Jacobian_arm;
-    
+    Jacobian_base << Jacobian_mobile.block(3,0,2,12),Eigen::MatrixXd::Zero(2,6);
 
     /////////////////////////////////////////// get end-effector pose & twsit /////////////////////////////////////////////////////
     KDL::ChainFkSolverPos_recursive fk_solver(chain);
@@ -322,6 +332,7 @@ void dghc_controller::getModel()
     {
         d_end_position = end_position;
         d_end_quat = end_quat;
+        d_mobile_quat = mobile_quat;
        
     }
 }
@@ -329,6 +340,7 @@ void dghc_controller::getModel()
 
 void dghc_controller::getTwist()
 {
+    ////////////////////////// end-effector admitance /////////////////////////////////
     if(init_step ==0)
     {
         last_update_time = rclcpp::Clock{}.now();
@@ -345,21 +357,20 @@ void dghc_controller::getTwist()
     Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd D = Eigen::MatrixXd::Identity(6,6);
     Eigen::MatrixXd K = Eigen::MatrixXd::Identity(6,6);
-    Eigen::MatrixXd W = Eigen::MatrixXd::Identity(18,18);
-    //임의의 Mass(M_,M_ori_), Damping(D_), Stiffness(K_)
+   
+    //virtual Mass(M_,M_ori_), Damping(D_), Stiffness(K_)
     double M_ = 5;
     double M_ori_ = 0.3;
     double D_ = 16;
-    double K_ = 40;
+    double K_ = 10;
     double W_ = 1;
     
     
 
     M.diagonal() << M_, M_, M_,M_ori_,M_ori_,M_ori_;
-    D.diagonal() << D_,D_,D_,0.2 *D_,0.2 *D_,0.2 *D_;
-    K.diagonal() << K_,K_,K_,0.2 *K_,0.2 *K_,0.2 *K_; 
-    W.diagonal() << W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_,W_; //x1,y1,x2,y2, ... ,z1,z2,z3,z4,q1, ... q6;
-
+    D.diagonal() << D_,D_,D_,0.1 *D_,0.1 *D_,0.1 *D_;
+    K.diagonal() << K_,K_,K_,0.1 *K_,0.1 *K_,0.1 *K_; 
+   
     error.head(3) = end_position - d_end_position;
     if(d_end_quat.coeffs().dot(end_quat.coeffs()) < 0.0)
     {
@@ -381,11 +392,52 @@ void dghc_controller::getTwist()
     {
       desire_adm_acc.segment(0, 3) *= (arm_max_acc_ / a_acc_norm);
     }
+   
     desire_adm_vel += desire_adm_acc * dt;
-  
-    allx_dot_d.clear();
-    allx_dot_d.push_back(desire_adm_vel);
     
+    
+    //////////////////////////////// mobile orientation virtual impedance && admitance ////////////////////////////
+    Eigen::MatrixXd b = Eigen::MatrixXd::Identity(3,3);
+    Eigen::MatrixXd k = Eigen::MatrixXd::Identity(3,3);
+    Eigen::MatrixXd Mass = Eigen::MatrixXd::Identity(2,2);
+    Eigen::MatrixXd Damping = Eigen::MatrixXd::Identity(2,2);
+   
+    b << 90,0,0,
+         0,90,0,
+         0,0,90;
+
+    k << 150,0,0,
+         0,150,0,
+         0,0,150;
+   
+    Eigen::Matrix3d mRmd = Eigen::Matrix3d::Identity(3,3);
+
+    mRmd = mobile_quat.toRotationMatrix().transpose()*d_mobile_quat.toRotationMatrix();
+    Eigen::Quaterniond mobile_e_quat(mRmd);
+    Eigen::VectorXd mobile_wrench = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd mobile_error = Eigen::VectorXd::Zero(3);
+    
+    mobile_error<<mobile_e_quat.x(),mobile_e_quat.y(),mobile_e_quat.z();
+    mobile_error = wRm*mobile_error;
+    mobile_wrench = k*(mobile_error) - b*mobile_twist.block(3,0,3,1);
+    
+
+    mobile_wrench = wRm.transpose()*mobile_wrench; //ref : base frame
+  
+    Mass << 50,0,
+         0,50;
+    Damping << 40,0,
+         0,40;   
+
+    Eigen::MatrixXd temp = Mass + dt*Damping;
+    d_mobile_twist = temp.inverse()*(Mass*d_mobile_twist + dt*mobile_wrench.block(0,0,2,1)); // ref : base frame
+    
+
+
+    allx_dot_d.clear();
+    allx_dot_d.push_back(desire_adm_vel); // ref: world frame
+    allx_dot_d.push_back(d_mobile_twist); // ref: base frame
+
 }
 
 void dghc_controller::setPriority()
@@ -393,9 +445,12 @@ void dghc_controller::setPriority()
     //choose scalar priorities (between one and zero) for each pair of tasks -> there exists 0.5*(numTasks*numTasks+numTasks) pairs!
     Eigen::VectorXd prioritiesVector;
     prioritiesVector = Eigen::VectorXd::Zero(0.5*(numTasks*numTasks+numTasks));
-    //exampleA: strict hierachy with "task0" strict more important that "task1" and "task1" strict more important that "task2"
-    prioritiesVector[0] = 0.0;
+    //exampleA: strict hierachy with "task1" strict more important that "task0" 
+    prioritiesVector[0] = 0.0;                                                    //     0  1   : task num    
+    prioritiesVector[1] = 1.0;                                                    //   0 0  1
+    prioritiesVector[2] = 0.0;                                                    //   1 0  0
    
+    
     int counter=0;
     for(unsigned int i=0; i<numTasks; i++){
      for(unsigned int j=i; j<numTasks; j++){
@@ -424,8 +479,8 @@ void dghc_controller::setInertia()
 void dghc_controller::getJacobian()
 {
     allJacobians.clear();
-    allJacobians.push_back(Jacobian_whole); 
-    
+    allJacobians.push_back(Jacobian_whole); // ref : world frame
+    allJacobians.push_back(Jacobian_base); // ref : mobile frame
     setJacobianMatrices(allJacobians);
     
 //    std::cout<<"alljacobians:"<<std::endl<<allJacobians[0]<<std::endl;
@@ -436,20 +491,17 @@ void dghc_controller::getProjectionM()
     for(unsigned int i=0; i<numTasks; i++){
         allProjections.push_back(Eigen::MatrixXd::Zero(Dof,Dof));
     }
-  
+    
     Eigen::VectorXd ranks;
     ranks = Eigen::VectorXd::Zero(numTasks);
-  
+    
     getAllGeneralizedProjectors(allProjections, ranks);
-
+ 
 }
 void dghc_controller::model2realCmd(Eigen::VectorXd V)
 {
-    for(short i = 0;i<V.size();i++)
-    {
-        if(isnan(V(i))) std::cout<<"nan detected: "<<std::endl<<V.transpose()<<std::endl;
-    }
-    Eigen::VectorXd thetalist = Eigen::VectorXd::Zero(4);
+   
+    
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(2,2);
 
     Eigen::VectorXd wfrV = Eigen::VectorXd::Zero(3);
@@ -468,52 +520,48 @@ void dghc_controller::model2realCmd(Eigen::VectorXd V)
     Eigen::VectorXd wheel_ew_vel_f = Eigen::VectorXd::Zero(4);
     
     
-
-    R<<cos(0.01),-sin(0.01),
-         sin(0.01),cos(0.01);
-    
-    u1 << cos(wheel_ro(0)),sin(wheel_ro(0));
-    u2 << cos(wheel_ro(1)),sin(wheel_ro(1));
-    u3 << cos(wheel_ro(2)),sin(wheel_ro(2));
-    u4 << cos(wheel_ro(3)),sin(wheel_ro(3));
-    
-    u1_f = R*u1;
-    u2_f = R*u2;
-    u3_f = R*u3;
-    u4_f = R*u4;
-   
-    wheel_ew_vel_cmd << u1.transpose()*V.block(0,0,2,1),u2.transpose()*V.block(2,0,2,1),u3.transpose()
-                        *V.block(4,0,2,1),u4.transpose()*V.block(6,0,2,1); 
-    //wheel_ew_vel_cmd = 1000*wheel_ew_vel_cmd/wheel_radius;
-    
-    // std::cout<<"u1: "<<std::endl<<u1.transpose()<<std::endl;
-    // std::cout<<"u2: "<<std::endl<<u2.transpose()<<std::endl;
-    // std::cout<<"u3: "<<std::endl<<u3.transpose()<<std::endl;
-    // std::cout<<"u4: "<<std::endl<<u4.transpose()<<std::endl;
-    std::cout<<"wheel_ew_vel_cmd"<<std::endl<<wheel_ew_vel_cmd.transpose()<<std::endl;
-
-    wheel_ew_vel_f <<  u1_f.transpose()*V.block(0,0,2,1),u2_f.transpose()*V.block(2,0,2,1),u3_f.transpose()
-                        *V.block(4,0,2,1),u4_f.transpose()*V.block(6,0,2,1); 
-    const double tolerance = 1e-6;
-    if(V.isZero(tolerance))
-      {
-        thetalist << 0, 0, 0, 0;
-      }
-      else
-      { 
-        
-        for(short i=0;i<4;i++)
+     for(short i = 0;i<4;i++)
+    {   
+       
+        if(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))<=0.005) 
         {
+           
+            thetalist(i) = 0;
+            wheel_ew_vel_cmd(i) = 0;
+            wheel_ro_vel_cmd(i) = 0;
+        }
+        else
+        {   
+            R<<cos(0.01),-sin(0.01),
+            sin(0.01),cos(0.01);
+
+            u1 << cos(wheel_ro(0)),sin(wheel_ro(0));
+            u2 << cos(wheel_ro(1)),sin(wheel_ro(1));
+            u3 << cos(wheel_ro(2)),sin(wheel_ro(2));
+            u4 << cos(wheel_ro(3)),sin(wheel_ro(3));
+
+            u1_f = R*u1;
+            u2_f = R*u2;
+            u3_f = R*u3;
+            u4_f = R*u4;
+
+            wheel_ew_vel_cmd << u1.transpose()*V.block(0,0,2,1),u2.transpose()*V.block(2,0,2,1),u3.transpose()
+                                *V.block(4,0,2,1),u4.transpose()*V.block(6,0,2,1); 
+            
+            wheel_ew_vel_f <<  u1_f.transpose()*V.block(0,0,2,1),u2_f.transpose()*V.block(2,0,2,1),u3_f.transpose()
+                                *V.block(4,0,2,1),u4_f.transpose()*V.block(6,0,2,1); 
             if(wheel_ew_vel_cmd(i)>0)
             {
             
               if( abs(wheel_ew_vel_f(i))>abs(wheel_ew_vel_cmd(i)))
               {
                   thetalist(i)= acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+                  if(isnan(thetalist(i)))  thetalist(i) = 0;
               }
               else
               {
                   thetalist(i)= -acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+                  if(isnan(thetalist(i)))  thetalist(i) = 0;
               }
             }
             else 
@@ -521,27 +569,26 @@ void dghc_controller::model2realCmd(Eigen::VectorXd V)
                if(abs(wheel_ew_vel_f(i)) > abs(wheel_ew_vel_cmd(i)))
               {
                   thetalist(i)= M_PI - acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+                  if(isnan(thetalist(i)))  thetalist(i) = 0;
               }
               else
               {
                   thetalist(i)= -M_PI + acos(wheel_ew_vel_cmd(i)/(sqrt(V(2*i)*V(2*i)+V(2*i+1)*V(2*i+1))));
+                  if(isnan(thetalist(i)))  thetalist(i) = 0;
               }
             }
         }
-      }
+        
+    }
+  
 
+    double p_gain = 3;
+    double d_gain = 0.015;
     
-    double p_gain = 1.5;
-    double d_gain = 0.1;
-    //std::cout<<"thetalist: "<<thetalist.transpose()<<std::endl;
     wheel_ro_vel_cmd = p_gain*thetalist-d_gain*wheel_ro_dot;
     
-    if(isnan(wheel_ro_vel_cmd(0)))
-     wheel_ro_vel_cmd <<0,0,0,0;
-
     wheel_pr_vel_cmd<<V.block(8,0,4,1);    
-    //wheel_pr_vel_cmd <<0,0,0,0; 
-    
+  
     mani_q_vel_cmd = V.block(12,0,6,1);
 }  
 int dghc_controller::run()
@@ -553,7 +600,7 @@ int dghc_controller::run()
     
     std::cout<<"dof: "<<Dof<<std::endl;
     std::cout<<"numTasks: "<<numTasks<<std::endl;
-    std::cout<<"tasksize: "<<tasksize<<std::endl;
+    std::cout<<"tasksize: "<<tasksize.sum()<<std::endl;
 
     rclcpp::Rate loop_rate(1000);
     bool qp_init_flag = 0;
@@ -572,14 +619,14 @@ int dghc_controller::run()
             getTwist(); //update x_dot_d
             
             setPriority();
-           
+         
             setInertia();
            
             getProjectionM(); //update_projection matrix
             
             if(!qp_init_flag)
             {   
-                
+                   
                 qp_init(allq,allx_dot_d,allJacobians,allProjections,numTasks,Dof,tasksize);
                 qp_init_flag =1;
                
@@ -589,9 +636,10 @@ int dghc_controller::run()
                 qp_updateAllConstraint(allProjections,allJacobians,allx_dot_d,allq);
                 
             }
-
+            
             if(!qp_solve_problem(allProjections))
-            {
+            {   
+
                 return 0;
             }
             else
@@ -601,8 +649,8 @@ int dghc_controller::run()
             }
 
             
-            mobile_pose_estimation();
-            
+           
+           
             
             init_step =1;
             fisrt_loop = 1; 

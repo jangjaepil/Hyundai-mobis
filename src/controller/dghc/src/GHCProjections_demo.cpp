@@ -87,12 +87,13 @@ void GHCProjections::setInertiaMatrix(Eigen::MatrixXd inertia) {
 }
 
 bool GHCProjections::getAllGeneralizedProjectors(std::vector<Eigen::MatrixXd> & ProjArray, Eigen::VectorXd & ranks) {
-    // std::cout<<"projarray size: "<<ProjArray.size()<<std::endl;
+     //std::cout<<"projarray size: "<<ProjArray.size()<<std::endl;
     assert(ProjArray.size() == numTasks);
-
+   
     for(unsigned int taskNr=0; taskNr<numTasks; taskNr++){
         ranks(taskNr) = this->getGeneralizedProjector(taskNr, ProjArray[taskNr]);
     }
+   
     return true;
 }
 
@@ -100,7 +101,7 @@ unsigned int GHCProjections::getGeneralizedProjector(unsigned int i, Eigen::Matr
     assert(i >= 0 && i < numTasks);
     assert(proj.rows() == DOFsize);
     assert(proj.cols() == DOFsize);
-
+     
     // ########################################
     //step 1: sort Ai and Jaugmented
     // ########################################
@@ -135,7 +136,7 @@ unsigned int GHCProjections::getGeneralizedProjector(unsigned int i, Eigen::Matr
         JaugmentedSi.row(idx) = Jaugmented.row(AiSorted[idx].second);
         AiVecS(idx) = AiVec(AiSorted[idx].second);
     }
-    //   std::cout<<"step1 done"<<std::endl;
+    
     // ########################################
     //step 2: create orthonormal basis (orthonormalization process)
     // ########################################
@@ -152,7 +153,7 @@ unsigned int GHCProjections::getGeneralizedProjector(unsigned int i, Eigen::Matr
         if((unsigned int)rankQRD > DOFsize){
             rankQRD = DOFsize;
         }
-//  std::cout<<"step2 done"<<std::endl;
+  
         // ########################################
         //step 3: compute generalized projector PiAis
         // ########################################
@@ -164,7 +165,7 @@ unsigned int GHCProjections::getGeneralizedProjector(unsigned int i, Eigen::Matr
         AiMatS = AiVecS2.asDiagonal();
         proj = L.transpose().inverse() * ( identityDOFsizeDOFsize - Q.leftCols(rankQRD) * AiMatS.topLeftCorner(rankQRD,rankQRD) * Q.leftCols(rankQRD).transpose() ) * L.transpose();
     }
-    // std::cout<<"step3 done"<<std::endl;
+    
     return rankQRD;
 }
 
