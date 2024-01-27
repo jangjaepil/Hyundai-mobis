@@ -51,13 +51,13 @@ void dghc_controller::timer_callback()
         std_msgs::msg::Float64MultiArray wheel_vel_msg;
         geometry_msgs::msg::Pose estimated_mobile_pose_msg;
 
-        estimated_mobile_pose_msg.position.x = desire_adm_vel(0);//X_kk(0)*0.001;
-        estimated_mobile_pose_msg.position.y = desire_adm_vel(1);//X_kk(1)*0.001;
-        estimated_mobile_pose_msg.position.z = desire_adm_vel(2);//X_kk(2)*0.001;
-        estimated_mobile_pose_msg.orientation.x = thetalist(0);
-        estimated_mobile_pose_msg.orientation.y = wheel_ro(0);
-        estimated_mobile_pose_msg.orientation.z = thetalist(3);
-        estimated_mobile_pose_msg.orientation.w = wheel_ro(3);
+        estimated_mobile_pose_msg.position.x = d_mobile_twist(0);//X_kk(0)*0.001;
+        estimated_mobile_pose_msg.position.y = d_mobile_twist(1);//X_kk(1)*0.001;
+        estimated_mobile_pose_msg.position.z = 0;//X_kk(2)*0.001;
+        estimated_mobile_pose_msg.orientation.x = wheel_pr_vel_cmd(0);//thetalist(0);
+        estimated_mobile_pose_msg.orientation.y = wheel_pr_vel_cmd(1);//wheel_ro(0);
+        estimated_mobile_pose_msg.orientation.z = wheel_pr_vel_cmd(2);//thetalist(3);
+        estimated_mobile_pose_msg.orientation.w = wheel_pr_vel_cmd(3);//wheel_ro(3);
 
         mani_vel_msg.data = {mani_q_vel_cmd(0),mani_q_vel_cmd(1),mani_q_vel_cmd(2),mani_q_vel_cmd(3),mani_q_vel_cmd(4),mani_q_vel_cmd(5)};
         lift_vel_msg.data = {wheel_pr_vel_cmd(0),wheel_pr_vel_cmd(1),wheel_pr_vel_cmd(2),wheel_pr_vel_cmd(3)}; //f_r,f_l,r_l,r_r
@@ -363,7 +363,7 @@ void dghc_controller::getTwist()
     double M_ori_ = 0.3;
     double D_ = 16;
     double K_ = 10;
-    double W_ = 1;
+    
     
     
 

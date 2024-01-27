@@ -9,8 +9,8 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     Ts = tasksize; 
     lbq = Eigen::VectorXd::Zero(Dof);
     ubq = Eigen::VectorXd::Zero(Dof);
-    lbq << -30,-30,-30,-30,-30,-30,-30,-30,-0,-0,-0,-0,-10,-10,-10,-10,-10,-10;  //
-    ubq << 30,30,30,30,30,30,30,30,0,0,0,0,10,10,10,10,10,10;
+    lbq << -30,-30,-30,-30,-30,-30,-30,-30,-1,-1,-1,-1,-10,-10,-10,-10,-10,-10;  //
+    ubq << 30,30,30,30,30,30,30,30,1,1,1,1,10,10,10,10,10,10;
     ctr = Eigen::VectorXd::Zero(Dof);
     
     qp_setcurrent_q(init_q);
