@@ -17,7 +17,7 @@ public:
     void qp_castDGHC2QPGradient(unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,Eigen::VectorXd& gradient);
     void qp_setLinearConstraint(unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,std::vector<Eigen::MatrixXd>& allProjections,std::vector<Eigen::MatrixXd>& alljacobian,Eigen::SparseMatrix<double>& constraintMatrix);
     void qp_setRef(std::vector<Eigen::VectorXd>& allx_dot_d);
-    void qp_setConstraintVectors(double& dt, unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,std::vector<Eigen::VectorXd>& allx_dot_d,Eigen::VectorXd& current_q,Eigen::VectorXd& lbq,Eigen::VectorXd& ubq,Eigen::VectorXd& lowerBound, Eigen::VectorXd& upperBound);
+    void qp_setConstraintVectors(double& dt, unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,std::vector<Eigen::VectorXd>& allx_dot_d,Eigen::VectorXd& current_q,Eigen::VectorXd& lbq,Eigen::VectorXd& ubq,Eigen::VectorXd& q_lower_limit,Eigen::VectorXd& q_upper_limit,Eigen::VectorXd& lowerBound, Eigen::VectorXd& upperBound);
     bool qp_solve_problem(std::vector<Eigen::MatrixXd>&allProjections);
     bool qp_updateAllConstraint(std::vector<Eigen::MatrixXd>&allProjections,std::vector<Eigen::MatrixXd>&update_jacobian,std::vector<Eigen::VectorXd>& update_x_dot_d,Eigen::VectorXd& update_q);
     Eigen::VectorXd getProjectedJointVel();
@@ -35,9 +35,11 @@ private:
     Eigen::SparseMatrix<double> linearMatrix;
     Eigen::VectorXd lowerBound;
     Eigen::VectorXd upperBound;
-    Eigen::VectorXd lbq;
-    Eigen::VectorXd ubq;
+    Eigen::VectorXd lbq_dot;
+    Eigen::VectorXd ubq_dot;
     Eigen::VectorXd current_q;
+    Eigen::VectorXd q_lower_limit;
+    Eigen::VectorXd q_upper_limit;
     Eigen::MatrixXd Qr;
     Eigen::MatrixXd Qi;
     std::vector<Eigen::MatrixXd> jacobians;

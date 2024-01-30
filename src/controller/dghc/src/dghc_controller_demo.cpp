@@ -60,7 +60,7 @@ void dghc_controller::timer_callback()
         estimated_mobile_pose_msg.orientation.w = wheel_pr_vel_cmd(3);//wheel_ro(3);
 
         mani_vel_msg.data = {mani_q_vel_cmd(0),mani_q_vel_cmd(1),mani_q_vel_cmd(2),mani_q_vel_cmd(3),mani_q_vel_cmd(4),mani_q_vel_cmd(5)};
-        lift_vel_msg.data = {wheel_pr_vel_cmd(0),wheel_pr_vel_cmd(1),wheel_pr_vel_cmd(2),wheel_pr_vel_cmd(3)}; //f_r,f_l,r_l,r_r
+        lift_vel_msg.data = {0,0,0,0}; //{wheel_pr_vel_cmd(0),wheel_pr_vel_cmd(1),wheel_pr_vel_cmd(2),wheel_pr_vel_cmd(3)}; //f_r,f_l,r_l,r_r
         wheel_vel_msg.data = {-wheel_ew_vel_cmd(0)/wheel_radius,wheel_ew_vel_cmd(1)/wheel_radius,-wheel_ew_vel_cmd(2)/wheel_radius,-wheel_ew_vel_cmd(3)/wheel_radius,wheel_ro_vel_cmd(0),wheel_ro_vel_cmd(1),wheel_ro_vel_cmd(2),wheel_ro_vel_cmd(3)};
         joint_vel_pub->publish(mani_vel_msg);
         lift_vel_pub->publish(lift_vel_msg);

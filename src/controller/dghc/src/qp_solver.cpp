@@ -7,10 +7,14 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     Nt = numTasks;
     Dof = DOFsize;
     Ts = tasksize; 
-    lbq = Eigen::VectorXd::Zero(Dof);
-    ubq = Eigen::VectorXd::Zero(Dof);
-    lbq << -30,-30,-30,-30,-30,-30,-30,-30,-1,-1,-1,-1,-10,-10,-10,-10,-10,-10;  //
-    ubq << 30,30,30,30,30,30,30,30,1,1,1,1,10,10,10,10,10,10;
+    lbq_dot = Eigen::VectorXd::Zero(Dof);
+    ubq_dot = Eigen::VectorXd::Zero(Dof);
+    q_upper_limit = Eigen::VectorXd::Zero(Dof-8);
+    q_lower_limit = Eigen::VectorXd::Zero(Dof-8);
+    lbq_dot << -30,-30,-30,-30,-30,-30,-30,-30,-5,-5,-5,-5,-M_PI,-M_PI,-M_PI,-M_PI,-M_PI,-M_PI;  // velocity limit
+    ubq_dot << 30,30,30,30,30,30,30,30,5,5,5,5,M_PI,M_PI,M_PI,M_PI,M_PI,M_PI;
+    q_upper_limit<<-0.05,-0.05,-0.05,-0.05,2*M_PI,2*M_PI,2*M_PI,2*M_PI,2*M_PI,2*M_PI; // joint limit
+    q_lower_limit<<-0.25,-0.25,-0.25,-0.25,-2*M_PI,-2*M_PI,-2*M_PI,-2*M_PI,-2*M_PI,-2*M_PI;
     ctr = Eigen::VectorXd::Zero(Dof);
     
     qp_setcurrent_q(init_q);
@@ -32,7 +36,7 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     std::cout<<"set gradient"<<std::endl;
     qp_setLinearConstraint(Nt,Dof,Ts,init_projections,init_jacobians,linearMatrix);
     std::cout<<"set constraint matrix"<<std::endl;
-    qp_setConstraintVectors(dt,Nt,Dof,Ts,init_x_dot_d,init_q,lbq,ubq,lowerBound,upperBound);
+    qp_setConstraintVectors(dt,Nt,Dof,Ts,init_x_dot_d,init_q,lbq_dot,ubq_dot,q_lower_limit,q_upper_limit,lowerBound,upperBound);
     std::cout<<"set constraint vector"<<std::endl;
     std::cout<<"cast to qp problem done"<<std::endl;
     //////////////////// initialize qp problem ///////////////////////////////////////////
@@ -129,11 +133,17 @@ void qp_solver::qp_setRef(std::vector<Eigen::VectorXd>& allx_dot_d)
 }
 void qp_solver::qp_setConstraintVectors(double& dt, unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,
                                         std::vector<Eigen::VectorXd>& allx_dot_d,Eigen::VectorXd& current_q,
-                                        Eigen::VectorXd& lbq,Eigen::VectorXd& ubq,Eigen::VectorXd& lowerBound, 
+                                        Eigen::VectorXd& lbq_dot,Eigen::VectorXd& ubq_dot,Eigen::VectorXd& q_lower_limit,
+                                        Eigen::VectorXd& q_upper_limit,Eigen::VectorXd& lowerBound, 
                                         Eigen::VectorXd& upperBound)
 {
+
     lowerBound = Eigen::VectorXd::Zero(Ts.sum()+Dof);
     upperBound = Eigen::VectorXd::Zero(Ts.sum()+Dof);
+    Eigen::VectorXd LB = Eigen::VectorXd::Zero(Dof);
+    Eigen::VectorXd UB = Eigen::VectorXd::Zero(Dof);
+    // std::cout<<"ref_lbq_dot: "<<std::endl<<lbq_dot<<std::endl;
+    // std::cout<<"ref_ubq_dot: "<<std::endl<<ubq_dot<<std::endl;
     int offset = 0;
     for(unsigned int i = 0;i<Nt;i++)
     {   
@@ -141,9 +151,44 @@ void qp_solver::qp_setConstraintVectors(double& dt, unsigned int& Nt, unsigned i
         upperBound.block(offset,0,Ts(i),1) = allx_dot_d[i];
         offset = offset + Ts(i);
     }
-        
-        lowerBound.block(offset,0,Dof,1) = lbq;
-        upperBound.block(offset,0,Dof,1) = ubq;        
+    
+    for(unsigned int i = 0 ; i<Dof;i++)
+    {
+        if(i>=8 && i<Dof)
+        {
+            if(current_q(i)>=q_upper_limit(i-8))
+            {
+                // std::cout<<"current q : "<<i<<"th "<<current_q(i)<<std::endl;
+                // std::cout<<"q_upper_limit : "<<i-8<<"th "<<q_upper_limit(i-8)<<std::endl;
+                LB(i) = lbq_dot(i);
+                UB(i) = 0;
+            }
+            else if(current_q(i)<= q_lower_limit(i-8))
+            {   
+                // std::cout<<"current q : "<<i<<"th "<<current_q(i)<<std::endl;
+                // std::cout<<"q_lower_limit : "<<i-8<<"th "<<q_lower_limit(i-8)<<std::endl;
+                UB(i) = ubq_dot(i);
+                LB(i) = 0;
+            }
+            else
+            {
+                UB(i) = ubq_dot(i);
+                LB(i) = lbq_dot(i);
+                // std::cout<<i<<"th joint is safe"<<std::endl;
+            }
+        }
+        else
+        {
+            UB(i) = ubq_dot(i);
+            LB(i) = lbq_dot(i);
+        }
+    }
+    // std::cout<<"lbq_dot: "<<std::endl<<LB.transpose()<<std::endl;
+    // std::cout<<"ubq_dot: "<<std::endl<<UB.transpose()<<std::endl;
+    // std::cout<<"current_q: "<<std::endl<<current_q.transpose()<<std::endl;
+    
+    lowerBound.block(offset,0,Dof,1) = LB;
+    upperBound.block(offset,0,Dof,1) = UB;        
 }
 
 bool qp_solver::qp_solve_problem(std::vector<Eigen::MatrixXd>&allProjections)
@@ -171,7 +216,7 @@ bool qp_solver::qp_updateAllConstraint(std::vector<Eigen::MatrixXd>&update_Proje
     qp_setProjectionMatrices(update_Projections);
     qp_setRef(update_x_dot_d);
     qp_setLinearConstraint(Nt,Dof,Ts,Projections,jacobians,linearMatrix);
-    qp_setConstraintVectors(dt,Nt,Dof,Ts,x_dot_d,current_q,lbq,ubq,lowerBound,upperBound);
+    qp_setConstraintVectors(dt,Nt,Dof,Ts,x_dot_d,current_q,lbq_dot,ubq_dot,q_lower_limit,q_upper_limit,lowerBound,upperBound);
     
     if (!solver.updateBounds(lowerBound, upperBound))
             return 1;
