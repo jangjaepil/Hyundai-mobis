@@ -206,7 +206,7 @@ void qp_solver::qp_setConstraintVectors(unsigned int& Nt, unsigned int& Dof,Eige
         }
     }
 
-   
+    //test
     // std::cout<<"lbq_dot: "<<std::endl<<LB.transpose()<<std::endl;
     // std::cout<<"ubq_dot: "<<std::endl<<UB.transpose()<<std::endl;
     // std::cout<<"current_q: "<<std::endl<<current_q.transpose()<<std::endl;

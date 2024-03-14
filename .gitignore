@@ -4,7 +4,8 @@
 ### C++ ###
 # Prerequisites
 *.d
-
+# bag files
+bag/
 # Compiled Object files
 *.slo
 *.lo
