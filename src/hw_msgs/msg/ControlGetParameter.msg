@@ -1,0 +1,16 @@
+uint8 mobile_battery
+uint8 manipulator_battery
+
+uint8 serial_disconnect_on
+
+uint8 motor_drive_on
+uint8 lift_brake_on
+uint8 wheel_brake_on
+uint8 motor_drive_error_clear
+uint8 motor_drive_op_mode
+
+float64 wheel_acc_limit
+float64 steering_acc_limit
+float64 lift_acc_limit
+float64 lift_dist_min
+float64 lift_dist_max

@@ -1,0 +1,40 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/mobis/ds4_driver_20231213/install/teleop_joy/include/**",
+        "/home/mobis/ds4_driver_20231213/install/ds4_driver_msgs/include/**",
+        "/home/mobis/mobis_ws/install/ur_calibration/include/**",
+        "/home/mobis/mobis_ws/install/ur_robot_driver/include/**",
+        "/home/mobis/mobis_ws/install/ur_controllers/include/**",
+        "/home/mobis/mobis_ws/install/ur_dashboard_msgs/include/**",
+        "/home/mobis/mobis_ws/install/serial_comm/include/**",
+        "/home/mobis/mobis_ws/install/linkpose_msgs/include/**",
+        "/home/mobis/mobis_ws/install/imu_msgs/include/**",
+        "/home/mobis/mobis_ws/install/iahrs_interfaces/include/**",
+        "/home/mobis/mobis_ws/install/hw_msgs/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/mobis/mobis_ws/src/IFRA_LinkPose/ros2_linkpose/include/**",
+        "/home/mobis/mobis_ws/src/Universal_Robots_ROS2_Driver-humble/ur_calibration/include/**",
+        "/home/mobis/mobis_ws/src/Universal_Robots_ROS2_Driver-humble/ur_controllers/include/**",
+        "/home/mobis/mobis_ws/src/Universal_Robots_ROS2_Driver-humble/ur_robot_driver/include/**",
+        "/home/mobis/mobis_ws/src/controller/dghc/include/**",
+        "/home/mobis/mobis_ws/src/controller/wholebody_admittance/include/**",
+        "/home/mobis/mobis_ws/src/osqp/include/**",
+        "/home/mobis/mobis_ws/src/osqp-eigen/include/**",
+        "/home/mobis/mobis_ws/src/serial_comm/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

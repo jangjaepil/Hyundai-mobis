@@ -1,0 +1,17 @@
+
+uint8 motor_drive_on
+uint8 lift_brake_on
+uint8 wheel_brake_on
+uint8 motor_drive_error_clear
+uint8 motor_drive_op_mode
+uint8 steer_vel_control_mode
+uint8 lift_vel_control_mode
+uint8 lift_trq_control_mode
+
+uint8 serial_reconnect_on
+
+float64 wheel_acc_limit
+float64 steering_acc_limit
+float64 lift_acc_limit
+float64 lift_dist_min
+float64 lift_dist_max

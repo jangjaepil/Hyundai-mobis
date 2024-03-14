@@ -1,5 +1,6 @@
 
 #include "GHCProjections.hpp"
+#include "LowPassFilter.hpp"
 #include "osqp_solver.hpp"
 #include "RequiredHeaders.hpp"
 #pragma once
@@ -7,13 +8,18 @@
 //순서대로, taskNumber, a_ii, a_ij
 typedef std::vector<std::tuple<int,double,double>> priorityTuples;
 
-class dghc_controller : public GHCProjections,public qp_solver,public rclcpp::Node{
+class dghc_controller : public GHCProjections,public qp_solver,public LowPassFilter,public rclcpp::Node{
 public:
     dghc_controller();
     void joint_states_callback(const sensor_msgs::msg::JointState& JointState_Data);
-    void mobile_pose_callback(const linkpose_msgs::msg::LinkPose Pose_Data);
-    void mobile_twist_callback(const linkpose_msgs::msg::LinkTwist Twist_Data);
+    void mobile_joint_states_callback(const hw_msgs::msg::Control::SharedPtr JointState_Data);
+    void imu_callback(const sensor_msgs::msg::Imu IMU_Data);
+    void ft_callback(const geometry_msgs::msg::WrenchStamped& ft_DATA);
     void desired_pose_callback(const geometry_msgs::msg::Pose& d_Pose_Data);
+    void desired_mobile_pose_callback(const geometry_msgs::msg::Pose& d_Mobile_Pose_Data);
+    void desired_mobile_parameters_callback(const geometry_msgs::msg::Pose& d_Mobile_Pose_Data);
+    bool init_topics();
+    void obs_callback(const std_msgs::msg::Float64MultiArray& obs_DATA);
     Eigen::MatrixXd KDLFrameToEigenFrame(const KDL::Frame& Frame);
     
     // void obstacle_states_callback(const geometry_msgs::PoseArray::ConstPtr& obstacleState);
@@ -43,13 +49,17 @@ private:
     
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_vel_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr lift_vel_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr wheel_vel_pub;
-    rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr estimated_mobile_pose_pub;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr wrench_pub; 
+    rclcpp::Publisher<hw_msgs::msg::Control>::SharedPtr control_pub;
+    rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr estimated_end_pose_pub;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_sub_;
-    rclcpp::Subscription<linkpose_msgs::msg::LinkPose>::SharedPtr mobile_pos_sub_;
-    rclcpp::Subscription<linkpose_msgs::msg::LinkTwist>::SharedPtr mobile_twist_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_pose_sub;
+    rclcpp::Subscription<hw_msgs::msg::Control>::SharedPtr mobile_joint_states_sub_;
+    rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr ft_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_pose_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_mobile_pose_sub;
+    rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr desired_mobile_parameters_sub;
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr obs_sub;
     std::string base_link;
     std::string end_link;
     KDL::Tree tree;
@@ -59,12 +69,25 @@ private:
     rclcpp::Time last_update_time = rclcpp::Clock{}.now();
     rclcpp::Time last_estimate_time = rclcpp::Clock{}.now();
     double dt = 0;
-    double Lx = 0.3;
-    double Ly = 0.3;
-    double wheel_radius = 173/2; //mm
+    double Lx = 0.240; // m
+    double Ly = 0.165;
+    double wheel_radius = 0.086; // m
     int joint_size;
-    bool init_joint_flag = 0;
+    bool init_mobile_joint_flag = 0;
+    bool init_mani_joint_flag = 0;
+    bool init_imu_flag = 0;
+    bool init_parameters_flag = 0;
+    bool init_ft_flag = 0;
+    bool init_bias_flag = 0;
     bool init_step = 0;
+    bool qp_init_flag = 0;
+    bool init_obs_flag = 0;
+    bool count1 = 0;
+    bool count2 = 0;
+    bool count3 = 0;
+    bool count4 = 0;
+    bool count5 = 0;
+    bool count6 = 0;
     unsigned int numTasks = 0;
     unsigned int Dof = 0;
     bool fisrt_loop = 0;
@@ -73,6 +96,7 @@ private:
     Eigen::VectorXd q_dot = Eigen::VectorXd::Zero(6);
     
     Eigen::VectorXd wheel_ro = Eigen::VectorXd::Zero(4);
+    Eigen::VectorXd wheel_ro_bias = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_ew = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_pr = Eigen::VectorXd::Zero(4);
     
@@ -88,6 +112,9 @@ private:
     Eigen::MatrixXd Jacobian_mobile = Eigen::MatrixXd::Identity(6,12);
     Eigen::MatrixXd Jacobian_mobile_inv = Eigen::MatrixXd::Identity(12,6);
     Eigen::MatrixXd Jacobian_whole = Eigen::MatrixXd::Identity(6,18);
+    Eigen::MatrixXd Jacobian_base = Eigen::MatrixXd::Identity(2,18); // mobile jacobian ref: mobile base frame
+    Eigen::MatrixXd Jacobian_obs_tmp = Eigen::MatrixXd::Identity(3,18);
+    Eigen::MatrixXd Jacobian_obs = Eigen::MatrixXd::Identity(1,18);
 
     Eigen::MatrixXd end_effector_tmp_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::MatrixXd end_effector_TF = Eigen::MatrixXd::Identity(4,4);
@@ -98,7 +125,12 @@ private:
     Eigen::MatrixXd mobile_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd mobile_position = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd mobile_twist = Eigen::VectorXd::Zero(6);
-    
+    Eigen::VectorXd d_mobile_twist = Eigen::VectorXd::Zero(2);
+    Eigen::MatrixXd b = Eigen::MatrixXd::Identity(3,3);
+    Eigen::MatrixXd k = Eigen::MatrixXd::Identity(3,3);
+
+    Eigen::VectorXd mobile_acc = Eigen::VectorXd::Zero(3);
+
     Eigen::VectorXd end_twist = Eigen::VectorXd::Zero(6);
     Eigen::Matrix3d wRm = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd wRm_e = Eigen::MatrixXd::Identity(6,6);
@@ -107,13 +139,27 @@ private:
     Eigen::Matrix3d mRe = Eigen::Matrix3d::Identity(3,3);
     Eigen::MatrixXd mRe_e = Eigen::MatrixXd::Identity(6,6);
     Eigen::VectorXd desire_adm_vel = Eigen::VectorXd::Zero(6);
+ 
+    Eigen::VectorXd ForceTorque = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd ForceTorque_tmp = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd ForceTorque_past = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd tmp = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd bias = Eigen::VectorXd::Zero(6);
     
+    LowPassFilter lpf;
+   
+
+    int bias_count = 0;
+    
+ 
+
     Eigen::VectorXd wheel_ew_vel_cmd = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_ro_vel_cmd = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_pr_vel_cmd = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd mani_q_vel_cmd = Eigen::VectorXd::Zero(6);
-    
-    Eigen::VectorXd estimated_mobile_vel = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd thetalist = Eigen::VectorXd::Zero(4);
+
+    Eigen::VectorXd estimated_mobile_vel = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd estimated_mobile_position = Eigen::VectorXd::Zero(3);
     Eigen::VectorXd mobile_twist_last = Eigen::VectorXd::Zero(6);
 
@@ -140,12 +186,20 @@ private:
   
     Eigen::Quaterniond end_quat;
     Eigen::Quaterniond d_end_quat;
+    Eigen::Quaterniond d_mobile_quat;
     Eigen::Quaterniond mobile_quat;
     Eigen::VectorXd tasksize;
     std::vector<Eigen::MatrixXd> allJacobians;
     std::vector<Eigen::MatrixXd> allProjections;
     std::vector<Eigen::VectorXd> allx_dot_d;
+
+    Eigen::VectorXd mobile_wrench_obs = Eigen::VectorXd::Zero(2);
+    Eigen::VectorXd d_mobile_vel_obs = Eigen::VectorXd::Zero(2);
+    std::vector<Eigen::VectorXd> obs_position;
+    std::vector<Eigen::VectorXd> obs_vel;
     
+
+    Eigen::VectorXd obs_data;
     
     
 };

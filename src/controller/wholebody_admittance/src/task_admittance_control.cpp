@@ -405,12 +405,6 @@ public:
             // std::cout<<"d_q_dot_lift: "<<desired_q_dot[1]<<", "<<desired_q_dot[0]<<", "<<desired_q_dot[2]<<", "<<desired_q_dot[3]<<", "<<std::endl;
             
             std_msgs::msg::Float64MultiArray wrench_msg;
-
-
-
-
-
-            
             wrench_msg.data = {ForceTorque[0],ForceTorque[1], ForceTorque[2],ForceTorque[3],ForceTorque[4],ForceTorque[5],
                             desire_q_dot[0],desire_q_dot[1],desire_q_dot[2],desire_q_dot[3],desire_q_dot[4],desire_q_dot[5]};
             wrench_pub->publish(wrench_msg);

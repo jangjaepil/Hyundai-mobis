@@ -1,0 +1,18 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/mobis/ds4_driver/install/ds4_driver/local/lib/python3.10/dist-packages",
+        "/home/mobis/ds4_driver/install/ds4_driver_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/comm_ws/install/imu_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/comm_ws/install/hw_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/mobis/ds4_driver/install/ds4_driver/local/lib/python3.10/dist-packages",
+        "/home/mobis/ds4_driver/install/ds4_driver_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/comm_ws/install/imu_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/comm_ws/install/hw_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

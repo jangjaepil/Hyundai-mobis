@@ -7,27 +7,42 @@ bool qp_solver::qp_init(Eigen::VectorXd& init_q,std::vector<Eigen::VectorXd>&ini
     Nt = numTasks;
     Dof = DOFsize;
     Ts = tasksize; 
-    lbq = Eigen::VectorXd::Zero(Dof);
-    ubq = Eigen::VectorXd::Zero(Dof);
-    lbq << -30,-30,-30,-30,-30,-30,-30,-30,0,0,0,0,-10,-10,-10,-10,-10,-10;  //
-    ubq << 30,30,30,30,30,30,30,30,0,0,0,0,10,10,10,10,10,10;
+    lbq_dot = Eigen::VectorXd::Zero(Dof);
+    ubq_dot = Eigen::VectorXd::Zero(Dof);
+    q_upper_limit = Eigen::VectorXd::Zero(Dof-8);
+    q_lower_limit = Eigen::VectorXd::Zero(Dof-8);
+    lbq_dot << -30,-30,-30,-30,-30,-30,-30,-30,-0.5,-0.5,-0.5,-0.5,-M_PI,-M_PI,-M_PI,-M_PI,-M_PI,-M_PI;  // velocity limit
+    ubq_dot << 30,30,30,30,30,30,30,30,0.5,0.5,0.5,0.5,M_PI,M_PI,M_PI,M_PI,M_PI,M_PI;
+    q_upper_limit<<0,0,0,0,2*M_PI,2*M_PI,2*M_PI,2*M_PI,2*M_PI,2*M_PI; // joint limit
+    q_lower_limit<<-0.15,-0.15,-0.15,-0.15,-2*M_PI,-2*M_PI,-2*M_PI,-2*M_PI,-2*M_PI,-2*M_PI;
     ctr = Eigen::VectorXd::Zero(Dof);
+    
     qp_setcurrent_q(init_q);
+    std::cout<<"set init q"<<std::endl;
     qp_setRef(init_x_dot_d);
+    std::cout<<"set init ref"<<std::endl;
     qp_setJacobianMatrices(init_jacobians);
+    std::cout<<"set jacobians"<<std::endl;
     qp_setProjectionMatrices(init_projections);
+    std::cout<<"set projections"<<std::endl;
     qp_setWeightMatrices(Qr,Qi);
+    std::cout<<"set qr and qi"<<std::endl;
     std::cout<<"set variables"<<std::endl;
   
     //////////////////// cast qp problem ///////////////////////////////////////////////
     qp_castDGHC2QPHessian(Nt,Dof,Ts,Qr,Qi,hessian);
     std::cout<<"set hessian"<< std::endl;
+    //std::cout<<hessian<<std::endl;
     qp_castDGHC2QPGradient(Nt,Dof,Ts,gradient);
     std::cout<<"set gradient"<<std::endl;
+    //std::cout<<gradient<<std::endl;
     qp_setLinearConstraint(Nt,Dof,Ts,init_projections,init_jacobians,linearMatrix);
     std::cout<<"set constraint matrix"<<std::endl;
-    qp_setConstraintVectors(dt,Nt,Dof,Ts,init_x_dot_d,init_q,lbq,ubq,lowerBound,upperBound);
+    std::cout<<linearMatrix<<std::endl;
+    qp_setConstraintVectors(Nt,Dof,Ts,init_x_dot_d,init_q,lbq_dot,ubq_dot,q_lower_limit,q_upper_limit,lowerBound,upperBound);
     std::cout<<"set constraint vector"<<std::endl;
+    std::cout<<upperBound.transpose()<<std::endl;
+    std::cout<<lowerBound.transpose()<<std::endl;
     std::cout<<"cast to qp problem done"<<std::endl;
     //////////////////// initialize qp problem ///////////////////////////////////////////
     solver.settings()->setWarmStart(true);
@@ -58,6 +73,7 @@ void qp_solver::qp_setcurrent_q(Eigen::VectorXd& q)
 }
 void qp_solver::qp_setWeightMatrices(Eigen::MatrixXd& allQr,Eigen::MatrixXd& allQi)
 { 
+    
     this-> Qr = allQr;
     this-> Qi = allQi;
     
@@ -98,7 +114,7 @@ void qp_solver::qp_setLinearConstraint(unsigned  int& Nt, unsigned int& Dof,Eige
                                         Eigen::SparseMatrix<double>& constraintMatrix)
 {
   
-
+    
     Eigen::MatrixXd constraintmatrix = Eigen::MatrixXd::Zero(Ts.sum()+Dof,Ts.sum()+Nt*Dof);
     constraintmatrix.block(0,0,Ts.sum(),Ts.sum()) = Eigen::MatrixXd::Identity(Ts.sum(),Ts.sum());
     
@@ -111,7 +127,13 @@ void qp_solver::qp_setLinearConstraint(unsigned  int& Nt, unsigned int& Dof,Eige
             offset = offset + Ts(i);
                 
             constraintmatrix.block(Ts.sum(),Ts.sum()+i*Dof,Dof,Dof) = allProjections[i];
-            
+            // if(Ts[i] ==1)
+            // {
+            //     for(unsigned int j =0;j<Nt;j++)
+            //     {
+            //         constraintmatrix.block(Ts.sum()+Dof,Ts.sum()+j*Dof,1,Dof) = alljacobian[i]*allProjections[j];
+            //     }
+            // } 
     }
 
     constraintMatrix = constraintmatrix.sparseView();
@@ -120,23 +142,87 @@ void qp_solver::qp_setRef(std::vector<Eigen::VectorXd>& allx_dot_d)
 {
     this->x_dot_d = allx_dot_d;
 }
-void qp_solver::qp_setConstraintVectors(double& dt, unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,
+void qp_solver::qp_setConstraintVectors(unsigned int& Nt, unsigned int& Dof,Eigen::VectorXd& Ts,
                                         std::vector<Eigen::VectorXd>& allx_dot_d,Eigen::VectorXd& current_q,
-                                        Eigen::VectorXd& lbq,Eigen::VectorXd& ubq,Eigen::VectorXd& lowerBound, 
+                                        Eigen::VectorXd& lbq_dot,Eigen::VectorXd& ubq_dot,Eigen::VectorXd& q_lower_limit,
+                                        Eigen::VectorXd& q_upper_limit,Eigen::VectorXd& lowerBound, 
                                         Eigen::VectorXd& upperBound)
 {
+
     lowerBound = Eigen::VectorXd::Zero(Ts.sum()+Dof);
     upperBound = Eigen::VectorXd::Zero(Ts.sum()+Dof);
+    Eigen::VectorXd LB = Eigen::VectorXd::Zero(Dof);
+    Eigen::VectorXd UB = Eigen::VectorXd::Zero(Dof);
+    // std::cout<<"ref_lbq_dot: "<<std::endl<<lbq_dot<<std::endl;
+    // std::cout<<"ref_ubq_dot: "<<std::endl<<ubq_dot<<std::endl;
     int offset = 0;
+    double obs_vel = 0;
     for(unsigned int i = 0;i<Nt;i++)
     {   
-        lowerBound.block(offset,0,Ts(i),1) = allx_dot_d[i];
-        upperBound.block(offset,0,Ts(i),1) = allx_dot_d[i];
-        offset = offset + Ts(i);
+        if(Ts(i) == 1)
+        {   
+            lowerBound(offset,0) =  allx_dot_d[i].norm();
+            upperBound(offset,0) =  allx_dot_d[i].norm();  
+            obs_vel = allx_dot_d[i].norm();
+            offset = offset + Ts(i);
+        }
+        else
+        {
+            lowerBound.block(offset,0,Ts(i),1) = allx_dot_d[i];
+            upperBound.block(offset,0,Ts(i),1) = allx_dot_d[i];
+            offset = offset + Ts(i);
+        }
     }
-        
-        lowerBound.block(offset,0,Dof,1) = lbq;
-        upperBound.block(offset,0,Dof,1) = ubq;        
+    
+    for(unsigned int i = 0 ; i<Dof;i++)
+    {
+        if(i>=8 && i<Dof)
+        {
+            if(current_q(i)>=q_upper_limit(i-8))
+            {
+                // std::cout<<"current q : "<<i<<"th "<<current_q(i)<<std::endl;
+                // std::cout<<"q_upper_limit : "<<i-8<<"th "<<q_upper_limit(i-8)<<std::endl;
+                LB(i) = lbq_dot(i);
+                UB(i) = 0;
+            }
+            else if(current_q(i)<= q_lower_limit(i-8))
+            {   
+                // std::cout<<"current q : "<<i<<"th "<<current_q(i)<<std::endl;
+                // std::cout<<"q_lower_limit : "<<i-8<<"th "<<q_lower_limit(i-8)<<std::endl;
+                UB(i) = ubq_dot(i);
+                LB(i) = 0;
+            }
+            else
+            {
+                UB(i) = ubq_dot(i);
+                LB(i) = lbq_dot(i);
+                // std::cout<<i<<"th joint is safe"<<std::endl;
+            }
+        }
+        else
+        {
+            UB(i) = ubq_dot(i);
+            LB(i) = lbq_dot(i);
+        }
+    }
+
+   
+    // std::cout<<"lbq_dot: "<<std::endl<<LB.transpose()<<std::endl;
+    // std::cout<<"ubq_dot: "<<std::endl<<UB.transpose()<<std::endl;
+    // std::cout<<"current_q: "<<std::endl<<current_q.transpose()<<std::endl;
+    
+    lowerBound.block(offset,0,Dof,1) = LB;
+    upperBound.block(offset,0,Dof,1) = UB;
+    // if(obs_vel>=0.008)
+    // {
+    //     lowerBound(offset+Dof,0) = 0;
+    //     upperBound(offset+Dof,0) = OsqpEigen::INFTY;        
+    // }
+    // else
+    // {
+    //     lowerBound(offset+Dof,0) = -OsqpEigen::INFTY;
+    //     upperBound(offset+Dof,0) = OsqpEigen::INFTY;             
+    // }
 }
 
 bool qp_solver::qp_solve_problem(std::vector<Eigen::MatrixXd>&allProjections)
@@ -164,7 +250,7 @@ bool qp_solver::qp_updateAllConstraint(std::vector<Eigen::MatrixXd>&update_Proje
     qp_setProjectionMatrices(update_Projections);
     qp_setRef(update_x_dot_d);
     qp_setLinearConstraint(Nt,Dof,Ts,Projections,jacobians,linearMatrix);
-    qp_setConstraintVectors(dt,Nt,Dof,Ts,x_dot_d,current_q,lbq,ubq,lowerBound,upperBound);
+    qp_setConstraintVectors(Nt,Dof,Ts,x_dot_d,current_q,lbq_dot,ubq_dot,q_lower_limit,q_upper_limit,lowerBound,upperBound);
     
     if (!solver.updateBounds(lowerBound, upperBound))
             return 1;
