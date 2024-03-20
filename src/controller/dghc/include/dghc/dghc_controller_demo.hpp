@@ -33,14 +33,9 @@ public:
     void model2realCmd(Eigen::VectorXd V);
     void mobile_pose_estimation();
     void mobile_pose_estimation_kalman(double dt_estimate,Eigen::VectorXd mobile_acc);
-    // void setTrackingPriority(const int manipulatorTaskNum, const int mobileTaskNum, const int poseTaskNum);
-    // void setObstaclePrirority(const std::vector<int> obstacleTaskNums);
-    // void setJointLimitPriority(const std::vector<int> jointLimitTaskNums);
-    // void priorityFilter();
-    // void changeAlphas(std::vector<double>& alphas,double t, double dt, double duration);
+    void momentumObs();
     void getProjectionM();
-    // bool alphasSetDone(const std::vector<double>& vec1, const std::vector<double>& vec2, double epsilon);
-    int run();
+      int run();
     
     
 private:
@@ -66,9 +61,11 @@ private:
     KDL::Chain chain;
     KDL::Frame end_effector_pose;
     std::string urdf_filename;
-    rclcpp::Time last_update_time = rclcpp::Clock{}.now();
+    rclcpp::Time last_update_time = rclcpp::Clock{}.now();  // for getTwist
+    rclcpp::Time last_update_time2 = rclcpp::Clock{}.now(); // for DOB
     rclcpp::Time last_estimate_time = rclcpp::Clock{}.now();
     double dt = 0;
+    double dt2 = 0; // for DOB
     double Lx = 0.240; // m
     double Ly = 0.165;
     double wheel_radius = 0.086; // m
@@ -94,6 +91,10 @@ private:
     
     Eigen::VectorXd q = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd q_dot = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd motor_current = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd motor_torque = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd motor_current_tmp = Eigen::VectorXd::Zero(6);
+    
     
     Eigen::VectorXd wheel_ro = Eigen::VectorXd::Zero(4);
     Eigen::VectorXd wheel_ro_bias = Eigen::VectorXd::Zero(4);
@@ -147,6 +148,7 @@ private:
     Eigen::VectorXd bias = Eigen::VectorXd::Zero(6);
     
     LowPassFilter lpf;
+    LowPassFilter lpf_c; //for motor current
    
 
     int bias_count = 0;
@@ -197,9 +199,16 @@ private:
     Eigen::VectorXd d_mobile_vel_obs = Eigen::VectorXd::Zero(2);
     std::vector<Eigen::VectorXd> obs_position;
     std::vector<Eigen::VectorXd> obs_vel;
-    
-
     Eigen::VectorXd obs_data;
+    
+    Eigen::VectorXd Pn = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd Pn_dot = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd Text = Eigen::VectorXd::Zero(6);
+    Eigen::MatrixXd L = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd C = Eigen::MatrixXd::Identity(6,6);
+    Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6,6);
+    Eigen::VectorXd g = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd Tcmd = Eigen::VectorXd::Zero(6);
     
     
 };

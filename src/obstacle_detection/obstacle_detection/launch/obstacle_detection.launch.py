@@ -17,12 +17,12 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'params_file',
-            description='/home/lpigeon/ros2_ws/src/obstacle_detection/obstacle_detection/config/dr_spaam_ros.yaml',
+            description='/home/mobis/mobis_ws/src/obstacle_detection/obstacle_detection/config/dr_spaam_ros.yaml',
             default_value=[LaunchConfiguration('params_file', default='$(find obstacle_detection)/config/dr_spaam_ros.yaml')]
         ),
         DeclareLaunchArgument(
             'topics_file',
-            description='/home/lpigeon/ros2_ws/src/obstacle_detection/obstacle_detection/config/topics.yaml',
+            description='/home/mobis/mobis_ws/src/obstacle_detection/obstacle_detection/config/topics.yaml',
             default_value=[LaunchConfiguration('topics_file', default='$(find obstacle_detection)/config/topics.yaml')]
         )
     ])

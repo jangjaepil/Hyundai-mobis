@@ -96,10 +96,12 @@ void dghc_controller::timer_callback()
         Control_msg.lift_vel_fl = -wheel_pr_vel_cmd(1);
         Control_msg.lift_vel_rl = -wheel_pr_vel_cmd(2);
         Control_msg.lift_vel_rr = -wheel_pr_vel_cmd(3);
-        
+        mani_q_vel_cmd<<0,0,0,0,0,0;
         mani_vel_msg.data = {mani_q_vel_cmd(0),mani_q_vel_cmd(1),mani_q_vel_cmd(2),mani_q_vel_cmd(3),mani_q_vel_cmd(4),mani_q_vel_cmd(5)};
         
         wrench_msg.data = {ForceTorque[0],ForceTorque[1], ForceTorque[2],ForceTorque[3],ForceTorque[4],ForceTorque[5]};
+        
+        //{motor_torque(0),motor_torque(1),motor_torque(2),motor_torque(3),motor_torque(4),motor_torque(5)}; 
         
         if(init_ft_flag ==1) wrench_pub->publish(wrench_msg);
         control_pub->publish(Control_msg);
@@ -109,7 +111,7 @@ void dghc_controller::timer_callback()
 }
 void dghc_controller::obs_callback(const std_msgs::msg::Float64MultiArray& obs_DATA)
 {   
-    std::cout<<"obs_DATA.data.size()"<<std::endl<<obs_DATA.data.size()<<std::endl;
+    //std::cout<<"obs_DATA.data.size()"<<std::endl<<obs_DATA.data.size()<<std::endl;
     obs_data.resize(obs_DATA.data.size());
     
     for(unsigned int i = 0;i<obs_DATA.data.size();i++)
@@ -127,8 +129,9 @@ void dghc_controller::ft_callback(const geometry_msgs::msg::WrenchStamped& ft_DA
     ForceTorque_tmp(3) = ft_DATA.wrench.torque.x;
     ForceTorque_tmp(4) = ft_DATA.wrench.torque.y;
     ForceTorque_tmp(5) = ft_DATA.wrench.torque.z;
-    int count = 1000;
-  
+    int count = 2000;
+    Eigen::VectorXd cutoff_freq = Eigen::VectorXd::Zero(ForceTorque_tmp.size());
+    cutoff_freq <<70,70,70,100,100,100;
     if(init_bias_flag == 0)
     {
         if(bias_count< count)
@@ -142,7 +145,7 @@ void dghc_controller::ft_callback(const geometry_msgs::msg::WrenchStamped& ft_DA
             bias = tmp/count;
             init_bias_flag = 1;
 
-            lpf.reconfigureFilter(0.001,100,6); //deltime,cutoff freq,value dof
+            lpf.reconfigureFilter(0.001,cutoff_freq,6); //deltime,cutoff freq,value dof
           
         }
         bias_count  = bias_count + 1;
@@ -200,6 +203,25 @@ void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState& 
     q_dot(4) = JointState_Data.velocity[3];
     q_dot(5) = JointState_Data.velocity[4];
 
+    motor_current_tmp(0) = JointState_Data.effort[5]; 
+    motor_current_tmp(1) = JointState_Data.effort[0]; 
+    motor_current_tmp(2) = JointState_Data.effort[1]; 
+    motor_current_tmp(3) = JointState_Data.effort[2]; 
+    motor_current_tmp(4) = JointState_Data.effort[3];
+    motor_current_tmp(5) = JointState_Data.effort[4];
+    if(init_mani_joint_flag == 0)
+    { 
+        Eigen::VectorXd cutoff_freq = Eigen::VectorXd::Zero(motor_current_tmp.size());
+        cutoff_freq<<10,10,10,150,150,150;
+        lpf_c.reconfigureFilter(0.001,cutoff_freq,6); //deltime,cutoff freq,value dof
+    }
+
+    motor_current = lpf_c.update(motor_current_tmp); // actual_current
+    Eigen::MatrixXd Kt = Eigen::MatrixXd::Identity(6,6);
+    double kt1 = 125; // mNm/A
+    double kt2 = 92.2;
+    Kt.diagonal()<<kt1,kt1,kt1,kt2,kt2,kt2;
+    motor_torque = Kt*motor_current;
     init_mani_joint_flag =1;
 }
 void dghc_controller::mobile_joint_states_callback(const hw_msgs::msg::Control::SharedPtr JointState_Data)
@@ -501,7 +523,8 @@ void dghc_controller::getTwist()
       desire_adm_acc.segment(0, 3) *= (arm_max_acc_ / a_acc_norm);
     }
     desire_adm_vel += desire_adm_acc * dt;
-  
+    
+
     //////////////////////////////// mobile orientation virtual impedance && admitance ////////////////////////////
    
     Eigen::MatrixXd Mass = Eigen::MatrixXd::Identity(2,2);
@@ -622,7 +645,7 @@ void dghc_controller::getTwist()
        
     
     }
-  
+    
     
     allx_dot_d.clear();
     allx_dot_d.push_back(desire_adm_vel); // ref: world frame
@@ -828,7 +851,7 @@ bool dghc_controller::init_topics()
         std::cout<<"init obs state"<<std::endl;
         count6 =1;
     }
-    if(init_mobile_joint_flag ==1 && init_mani_joint_flag ==1 && init_imu_flag == 1 /*&& init_parameters_flag ==1*/ && init_ft_flag ==1 && init_obs_flag ==1) 
+    if(init_mani_joint_flag ==1 && init_mobile_joint_flag ==1 &&  init_imu_flag == 1 /*&& init_parameters_flag ==1*/ && init_ft_flag ==1 && init_obs_flag ==1) 
     {
         return true;
     }
@@ -838,12 +861,32 @@ bool dghc_controller::init_topics()
     }
 
 }
+
+void dghc_controller::momentumObs()
+{
+     if(init_step ==0)
+    {
+        last_update_time2 = rclcpp::Clock{}.now();
+        Pn = M*q_dot;
+        Pn_dot = Eigen::VectorXd::Zero(6);
+    }
+    dt2 = (rclcpp::Clock{}.now() - last_update_time2).seconds();
+    last_update_time2 = rclcpp::Clock{}.now();
+    
+    Pn = Pn + dt2*Pn_dot;
+    
+    Text = L*(M*q_dot.block(0,0,6,1) - Pn);
+    
+    Pn_dot = C.transpose()*q_dot- g + Tcmd + Text;
+    
+    
+}
 int dghc_controller::run()
 {   
     tasksize = getTasksize();
     numTasks = getNumTasks();
     Dof = getDOFsize();
-    estimated_mobile_position<<0,0,570; //unit: mm ,initial relative position w between orld frame and mobile base frame
+    estimated_mobile_position<<0,0,570; //unit: mm ,initial relative position between World frame and mobile base frame
      
     std::cout<<"dof: "<<Dof<<std::endl;
     std::cout<<"numTasks: "<<numTasks<<std::endl;
@@ -855,10 +898,13 @@ int dghc_controller::run()
     {  
         if(init_topics())
         {
+           
             mobile_pose_estimation();
             
             getModel(); //update current q
            
+            //momentumObs();
+
             getTwist(); //update x_dot_d
             
             getJacobian(); //update jacobian matrix
@@ -868,7 +914,7 @@ int dghc_controller::run()
             setInertia();
            
             getProjectionM(); //update_projection matrix
-            
+           
             if(!qp_init_flag)
             {   
                 

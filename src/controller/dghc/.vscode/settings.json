@@ -1,0 +1,35 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/mobis/ds4_driver_20231213/install/ds4_driver/local/lib/python3.10/dist-packages",
+        "/home/mobis/ds4_driver_20231213/install/ds4_driver_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/ur_robot_driver/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/ur_moveit_config/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/ur_dashboard_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/build/obstacle_detection",
+        "/home/mobis/mobis_ws/install/obstacle_detection/lib/python3.10/site-packages",
+        "/home/mobis/mobis_ws/install/linkpose_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/imu_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/iahrs_interfaces/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/hw_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/mobis/ds4_driver_20231213/install/ds4_driver/local/lib/python3.10/dist-packages",
+        "/home/mobis/ds4_driver_20231213/install/ds4_driver_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/ur_robot_driver/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/ur_moveit_config/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/ur_dashboard_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/build/obstacle_detection",
+        "/home/mobis/mobis_ws/install/obstacle_detection/lib/python3.10/site-packages",
+        "/home/mobis/mobis_ws/install/linkpose_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/imu_msgs/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/iahrs_interfaces/local/lib/python3.10/dist-packages",
+        "/home/mobis/mobis_ws/install/hw_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "files.associations": {
+        "chrono": "cpp"
+    }
+}

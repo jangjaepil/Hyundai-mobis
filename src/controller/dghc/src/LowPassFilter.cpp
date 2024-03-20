@@ -12,46 +12,33 @@ LowPassFilter::LowPassFilter()
 {
 
 }
-	
-LowPassFilter::LowPassFilter(float iCutOffFrequency, float iDeltaTime):
-
-	ePow(1-exp(-iDeltaTime * 2 * M_PI * iCutOffFrequency))
-{
-	#if ERROR_CHECK
-	if (iDeltaTime <= 0){
-		std::cout << "Warning: A LowPassFilter instance has been configured with 0 s as delta time.";
-		ePow = 0;
-	}
-	if(iCutOffFrequency <= 0){
-		std::cout << "Warning: A LowPassFilter instance has been configured with 0 Hz as cut-off frequency.";
-		ePow = 0;
-	}
-	#endif
-	
-}
 
 Eigen::VectorXd LowPassFilter::update(Eigen::VectorXd input){
 	
-	return output += (input - output) * ePow;
+	return output += EPOW*(input - output);
 }
 
-Eigen::VectorXd LowPassFilter::update(Eigen::VectorXd input, float deltaTime, float cutoffFrequency){
+Eigen::VectorXd LowPassFilter::update(Eigen::VectorXd input, float deltaTime, Eigen::VectorXd cutoffFrequency){
 	reconfigureFilter(deltaTime, cutoffFrequency,dof); //Changes ePow accordingly.
-	return output += (input - output) * ePow;
+	return output += EPOW*(input - output) ;
 }
 
-void LowPassFilter::reconfigureFilter(float deltaTime, float cutoffFrequency,int DOF){
+void LowPassFilter::reconfigureFilter(float deltaTime, Eigen::VectorXd cutoffFrequency,int DOF){
 	#if ERROR_CHECK
 	if (deltaTime <= 0){
 		std::cout << "Warning: A LowPassFilter instance has been configured with 0 s as delta time.";
 		ePow = 0;
 	}
-	if(cutoffFrequency <= 0){
-		std::cout << "Warning: A LowPassFilter instance has been configured with 0 Hz as cut-off frequency.";
-		ePow = 0;
-	}
+	
 	#endif
-	ePow = 1-exp(-deltaTime * 2 * M_PI * cutoffFrequency);
+	
 	output = Eigen::VectorXd::Zero(DOF);
+	EPOW = Eigen::MatrixXd::Identity(DOF,DOF);
+	
+	for(int i=0;i<DOF;i++)
+	{
+		EPOW(i,i) = 1-exp(-deltaTime * 2 * M_PI * cutoffFrequency(i));
+	}
+	this->EPOW = EPOW;
 	this -> dof = DOF;
 }

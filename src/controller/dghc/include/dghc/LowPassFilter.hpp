@@ -9,15 +9,15 @@ class LowPassFilter{
 public:
 	//constructors
 	LowPassFilter();
-	LowPassFilter(float iCutOffFrequency, float iDeltaTime);
 	//functions
 	Eigen::VectorXd update(Eigen::VectorXd input);
-	Eigen::VectorXd update(Eigen::VectorXd input, float deltaTime, float cutoffFrequency);
+	Eigen::VectorXd update(Eigen::VectorXd input, float deltaTime, Eigen::VectorXd cutoffFrequency);
 	//get and configure funtions
 	Eigen::VectorXd getOutput() const{return output;}
-	void reconfigureFilter(float deltaTime, float cutoffFrequency,int dof);
+	void reconfigureFilter(float deltaTime, Eigen::VectorXd cutoffFrequency,int dof);
 private:
 	Eigen::VectorXd output;
+	Eigen::MatrixXd EPOW;
 	float ePow;
 	int dof;
 };

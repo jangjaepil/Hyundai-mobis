@@ -34,7 +34,7 @@ class ObstacleDetectorNode(Node):
         """
         @brief      Reads parameters from ROS 2 parameters.
         """
-        self.weight_file = read_param(self, "~weight_file", "/home/mobis/comm_ws/src/obstacle_detection/obstacle_detection/ckpts/ckpt_jrdb_ann_drow3_e40.pth")
+        self.weight_file = read_param(self, "~weight_file", "/home/mobis/mobis_ws/src/obstacle_detection/obstacle_detection/ckpts/ckpt_jrdb_ann_drow3_e40.pth")
         self.conf_thresh = read_param(self, "~conf_thresh", 0.9)
         self.stride = read_param(self, "~stride", 1)
         self.detector_model = read_param(self, "~detector_model", "DROW3")
