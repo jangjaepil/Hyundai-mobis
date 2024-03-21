@@ -61,11 +61,18 @@ private:
     KDL::Chain chain;
     KDL::Frame end_effector_pose;
     std::string urdf_filename;
+
+    pinocchio::Model p_model; 
+    pinocchio::Data data;
+
     rclcpp::Time last_update_time = rclcpp::Clock{}.now();  // for getTwist
     rclcpp::Time last_update_time2 = rclcpp::Clock{}.now(); // for DOB
-    rclcpp::Time last_estimate_time = rclcpp::Clock{}.now();
-    double dt = 0;
+    rclcpp::Time last_update_time3 = rclcpp::Clock{}.now(); // for motor current
+    rclcpp::Time last_estimate_time = rclcpp::Clock{}.now(); // mobile pose estimation
+    
+    double dt = 0;  // admitance
     double dt2 = 0; // for DOB
+    double dt3 = 0; // for motor current
     double Lx = 0.240; // m
     double Ly = 0.165;
     double wheel_radius = 0.086; // m
@@ -117,6 +124,10 @@ private:
     Eigen::MatrixXd Jacobian_obs_tmp = Eigen::MatrixXd::Identity(3,18);
     Eigen::MatrixXd Jacobian_obs = Eigen::MatrixXd::Identity(1,18);
 
+    Eigen::MatrixXd M_arm_mat = Eigen::MatrixXd::Zero(6,6);
+    Eigen::MatrixXd C_arm_mat = Eigen::MatrixXd::Zero(6,6);
+    Eigen::VectorXd G_arm_mat = Eigen::VectorXd::Zero(6);
+    
     Eigen::MatrixXd end_effector_tmp_TF = Eigen::MatrixXd::Identity(4,4);
     Eigen::MatrixXd end_effector_TF = Eigen::MatrixXd::Identity(4,4);
 
@@ -146,12 +157,13 @@ private:
     Eigen::VectorXd ForceTorque_past = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd tmp = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd bias = Eigen::VectorXd::Zero(6);
+    int bias_count = 0; // for FT sensor 
     
     LowPassFilter lpf;
     LowPassFilter lpf_c; //for motor current
-   
-
-    int bias_count = 0;
+    LowPassFilter lpf_t; //for ext torque estimation
+    Eigen::VectorXd bias_T = Eigen::VectorXd::Zero(6);
+    int bias_count_T = 0; //for ext torque estimation
     
  
 
@@ -204,11 +216,12 @@ private:
     Eigen::VectorXd Pn = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd Pn_dot = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd Text = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd Text_wg = Eigen::VectorXd::Zero(6);
+    
     Eigen::MatrixXd L = Eigen::MatrixXd::Identity(6,6);
-    Eigen::MatrixXd C = Eigen::MatrixXd::Identity(6,6);
-    Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6,6);
-    Eigen::VectorXd g = Eigen::VectorXd::Zero(6);
     Eigen::VectorXd Tcmd = Eigen::VectorXd::Zero(6);
+
+    
     
     
 };

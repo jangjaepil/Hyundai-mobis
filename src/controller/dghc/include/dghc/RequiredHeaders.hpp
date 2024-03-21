@@ -28,6 +28,10 @@
 #include <kdl/chaindynparam.hpp>
 #include <kdl_parser/kdl_parser.hpp>
 
+#include <pinocchio/parsers/urdf.hpp>
+#include <pinocchio/algorithm/rnea.hpp>
+#include <pinocchio/algorithm/crba.hpp>
+
 #include <urdf/model.h>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 

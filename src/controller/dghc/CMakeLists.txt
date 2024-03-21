@@ -21,10 +21,12 @@ find_package(Eigen3)
 find_package(OsqpEigen REQUIRED)
 find_package(kdl_parser REQUIRED)
 find_package(urdf REQUIRED)
+find_package(pinocchio REQUIRED)
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
   include/dghc
+
   )
 
 add_executable(dghc_demo
@@ -45,7 +47,7 @@ target_link_libraries (dghc_demo Eigen3::Eigen OsqpEigen::OsqpEigen)
 target_link_libraries (trajectory Eigen3::Eigen)
 target_link_libraries (obstacle Eigen3::Eigen)
 
-ament_target_dependencies(dghc_demo rclcpp std_msgs sensor_msgs geometry_msgs linkpose_msgs hw_msgs kdl_parser urdf) 
+ament_target_dependencies(dghc_demo rclcpp std_msgs sensor_msgs geometry_msgs linkpose_msgs hw_msgs kdl_parser urdf pinocchio) 
 ament_target_dependencies(trajectory rclcpp std_msgs geometry_msgs) 
 ament_target_dependencies(obstacle rclcpp std_msgs geometry_msgs) 
 

@@ -29,7 +29,12 @@ dghc_controller::dghc_controller() :Node("dghc_controller")
     }
     joint_size = chain.getNrOfJoints();
     RCLCPP_INFO(rclcpp::get_logger("joint_size_logger"), "Joint size: %d", joint_size); // joint_size와 n 값이 다르면 chain에서 오류가 발생 -> 이를 확인하기 위함
-   
+    
+     
+    pinocchio::urdf::buildModel(urdf_filename, p_model);
+    data = pinocchio::Data(p_model);
+    
+
     timer_ = this->create_wall_timer(1ms, std::bind(&dghc_controller::timer_callback, this));
     joint_states_sub_  = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 100, std::bind(&dghc_controller::joint_states_callback, this, std::placeholders::_1));
     mobile_joint_states_sub_ = this->create_subscription<hw_msgs::msg::Control>("/Robot_Variable",10, std::bind(&dghc_controller::mobile_joint_states_callback, this, std::placeholders::_1));
@@ -96,12 +101,15 @@ void dghc_controller::timer_callback()
         Control_msg.lift_vel_fl = -wheel_pr_vel_cmd(1);
         Control_msg.lift_vel_rl = -wheel_pr_vel_cmd(2);
         Control_msg.lift_vel_rr = -wheel_pr_vel_cmd(3);
-        mani_q_vel_cmd<<0,0,0,0,0,0;
+        //mani_q_vel_cmd<<0,0,0,0,0,0;
         mani_vel_msg.data = {mani_q_vel_cmd(0),mani_q_vel_cmd(1),mani_q_vel_cmd(2),mani_q_vel_cmd(3),mani_q_vel_cmd(4),mani_q_vel_cmd(5)};
         
-        wrench_msg.data = {ForceTorque[0],ForceTorque[1], ForceTorque[2],ForceTorque[3],ForceTorque[4],ForceTorque[5]};
+        wrench_msg.data = {Text_wg(0),Text_wg(1),Text_wg(2),Text_wg(3),Text_wg(4),Text_wg(5)};
+        
         
         //{motor_torque(0),motor_torque(1),motor_torque(2),motor_torque(3),motor_torque(4),motor_torque(5)}; 
+        //{G_arm_mat(0),G_arm_mat(1),G_arm_mat(2),G_arm_mat(3),G_arm_mat(4),G_arm_mat(5)};
+        //{ForceTorque[0],ForceTorque[1], ForceTorque[2],ForceTorque[3],ForceTorque[4],ForceTorque[5]};
         
         if(init_ft_flag ==1) wrench_pub->publish(wrench_msg);
         control_pub->publish(Control_msg);
@@ -203,25 +211,35 @@ void dghc_controller::joint_states_callback(const sensor_msgs::msg::JointState& 
     q_dot(4) = JointState_Data.velocity[3];
     q_dot(5) = JointState_Data.velocity[4];
 
-    motor_current_tmp(0) = JointState_Data.effort[5]; 
-    motor_current_tmp(1) = JointState_Data.effort[0]; 
-    motor_current_tmp(2) = JointState_Data.effort[1]; 
-    motor_current_tmp(3) = JointState_Data.effort[2]; 
-    motor_current_tmp(4) = JointState_Data.effort[3];
-    motor_current_tmp(5) = JointState_Data.effort[4];
+    motor_current_tmp(0) = 1000*JointState_Data.effort[5]; 
+    motor_current_tmp(1) = 1000*JointState_Data.effort[0]; 
+    motor_current_tmp(2) = 1000*JointState_Data.effort[1]; 
+    motor_current_tmp(3) = 1000*JointState_Data.effort[2]; 
+    motor_current_tmp(4) = 1000*JointState_Data.effort[3];
+    motor_current_tmp(5) = 1000*JointState_Data.effort[4]; //Unit: mA
+    Eigen::VectorXd cutoff_freq = Eigen::VectorXd::Zero(motor_current_tmp.size());
+    cutoff_freq<<10,10,10,150,150,150;
     if(init_mani_joint_flag == 0)
     { 
-        Eigen::VectorXd cutoff_freq = Eigen::VectorXd::Zero(motor_current_tmp.size());
-        cutoff_freq<<10,10,10,150,150,150;
+        
         lpf_c.reconfigureFilter(0.001,cutoff_freq,6); //deltime,cutoff freq,value dof
+        last_update_time3 = rclcpp::Clock{}.now(); 
+        dt3 = 0.001;    
     }
+    else
+    {
+        dt3 = (rclcpp::Clock{}.now() - last_update_time3).seconds();
+        last_update_time3 = rclcpp::Clock{}.now();
 
-    motor_current = lpf_c.update(motor_current_tmp); // actual_current
+    }
+    
+    motor_current = lpf_c.update(motor_current_tmp,dt3,cutoff_freq); // actual_current //input,del time, cutoff freq
     Eigen::MatrixXd Kt = Eigen::MatrixXd::Identity(6,6);
-    double kt1 = 125; // mNm/A
-    double kt2 = 92.2;
+    motor_current = motor_current*0.001; // Unit: A
+    double kt1 = 0.135; // Nm/A
+    double kt2 = 0.0922;
     Kt.diagonal()<<kt1,kt1,kt1,kt2,kt2,kt2;
-    motor_torque = Kt*motor_current;
+    motor_torque = Kt*motor_current; // Unit: Nm
     init_mani_joint_flag =1;
 }
 void dghc_controller::mobile_joint_states_callback(const hw_msgs::msg::Control::SharedPtr JointState_Data)
@@ -456,13 +474,27 @@ void dghc_controller::getModel()
     
     end_twist = Jacobian_arm*q_dot + mobile_twist; //unit : m/s
     
+    //////////////////////////////////////////// get dynamic parameters ///////////////////////////////////////////////////////////
     KDL::ChainDynParam dyn_param(chain,KDL::Vector(0.0,0.0,-9.8));
-
+    
+    KDL::JntSpaceInertiaMatrix M_arm(joint_size); // Compute the Mass matrix
+    dyn_param.JntToMass(Q,M_arm);
+    M_arm_mat = M_arm.data;
+    
+    KDL::JntArray G_arm(joint_size); // Compute the Gravity term
+    dyn_param.JntToGravity(Q,G_arm);
+    G_arm_mat = G_arm.data;
+    
+    // Coriolis Matrix 계산
+    
+    C_arm_mat = pinocchio::computeCoriolisMatrix(p_model, data, q, q_dot);
+    
     if(init_step == 0) 
     {
         d_end_position = end_position;
         d_end_quat = end_quat;
         d_mobile_quat = mobile_quat;
+       
        
     }
         
@@ -864,21 +896,57 @@ bool dghc_controller::init_topics()
 
 void dghc_controller::momentumObs()
 {
-     if(init_step ==0)
+    Eigen::VectorXd cutoff_freq = Eigen::VectorXd::Zero(6);
+    cutoff_freq<<10,10,10,150,150,150; // Unit: Hz
+
+    Eigen::VectorXd Text_wg_tmp = Eigen::VectorXd::Zero(6);
+    if(init_step ==0)
     {
         last_update_time2 = rclcpp::Clock{}.now();
-        Pn = M*q_dot;
-        Pn_dot = Eigen::VectorXd::Zero(6);
+        Pn = M_arm_mat*q_dot;
+        Text = G_arm_mat;
+        Pn_dot = C_arm_mat.transpose()*q_dot- G_arm_mat + motor_torque + Text;;
+        last_update_time2 = rclcpp::Clock{}.now();
+        lpf_t.reconfigureFilter(0.001,cutoff_freq,6); 
+        dt2 = 0.001;
     }
-    dt2 = (rclcpp::Clock{}.now() - last_update_time2).seconds();
-    last_update_time2 = rclcpp::Clock{}.now();
+    else
+    {
+        dt2 = (rclcpp::Clock{}.now() - last_update_time2).seconds();
+        last_update_time2 = rclcpp::Clock{}.now();
+        L.diagonal()<<1,1,1,1,1,1;
+        Pn = Pn + dt2*Pn_dot;
     
-    Pn = Pn + dt2*Pn_dot;
+        Text = L*(M_arm_mat*q_dot.block(0,0,6,1) - Pn); // external torque including gravity
     
-    Text = L*(M*q_dot.block(0,0,6,1) - Pn);
+        Pn_dot = C_arm_mat.transpose()*q_dot- G_arm_mat + motor_torque + Text;
     
-    Pn_dot = C.transpose()*q_dot- g + Tcmd + Text;
+    }
     
+
+    Text_wg_tmp = Text - G_arm_mat;
+    Text_wg_tmp = lpf_t.update(Text_wg_tmp,dt2,cutoff_freq);
+    int count = 4000;
+    int wait_count = 2000;
+    if(bias_count_T<count)
+    {   
+        if(bias_count_T<wait_count)
+        {
+            bias_T = Eigen::VectorXd::Zero(6);
+            Text_wg = Eigen::VectorXd::Zero(6);
+        }
+        else
+        {
+            bias_T = bias_T + Text_wg_tmp;
+            Text_wg = Eigen::VectorXd::Zero(6);
+            
+        }
+        bias_count_T ++;
+    }
+    else
+    {
+        Text_wg = Text_wg_tmp - bias_T/count; 
+    }
     
 }
 int dghc_controller::run()
@@ -903,7 +971,7 @@ int dghc_controller::run()
             
             getModel(); //update current q
            
-            //momentumObs();
+            momentumObs();
 
             getTwist(); //update x_dot_d
             
