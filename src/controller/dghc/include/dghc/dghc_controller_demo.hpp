@@ -141,6 +141,10 @@ private:
     Eigen::MatrixXd b = Eigen::MatrixXd::Identity(3,3);
     Eigen::MatrixXd k = Eigen::MatrixXd::Identity(3,3);
 
+    Eigen::VectorXd qd_dd = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd qd_d = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd qd = Eigen::VectorXd::Zero(6);
+
     Eigen::VectorXd mobile_acc = Eigen::VectorXd::Zero(3);
 
     Eigen::VectorXd end_twist = Eigen::VectorXd::Zero(6);
